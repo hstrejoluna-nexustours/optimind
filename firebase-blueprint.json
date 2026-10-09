@@ -33,6 +33,11 @@
           "type": "number",
           "description": "Total de sesiones ABCDE completadas"
         },
+        "plan": {
+          "type": "string",
+          "description": "Nivel de suscripción del MicroSaaS (free, pro, clinical)",
+          "enum": ["free", "pro", "clinical"]
+        },
         "bookmarkedTerms": {
           "type": "array",
           "description": "IDs de términos guardados del glosario"

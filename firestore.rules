@@ -44,6 +44,7 @@ service cloud.firestore {
         data.streak is number &&
         data.streak >= 0 &&
         data.streak <= 10000 &&
+        (!('plan' in data) || data.plan in ['free', 'pro', 'clinical']) &&
         (!('totalWorkouts' in data) || (data.totalWorkouts is number && data.totalWorkouts >= 0)) &&
         (!('bookmarkedTerms' in data) || (data.bookmarkedTerms is list && data.bookmarkedTerms.size() <= 100));
     }

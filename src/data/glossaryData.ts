@@ -36,7 +36,20 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     fullExplanation: 'Diseñado por Seligman, Abramson y Semmel para evaluar el hábito explicativo de una persona ante eventos positivos y negativos. Mide Permanencia (PmB/PmG), Amplitud (PvB/PvG) y Personalización (PsB/PsG). Se utiliza tanto en adultos (ASQ) como en niños y adolescentes (CASQ).',
     practicalExample: 'Un puntaje bajo en Permanencia para eventos negativos predice mayor resistencia a la depresión y mayor longevidad inmunológica.',
     tags: ['Evaluación', 'Ciencia de Seligman'],
-    seligmanQuote: 'Tu estilo explicativo es tan constante como tu firma, pero a diferencia de esta, puedes rediseñarlo conscientemente.'
+    seligmanQuote: 'Tu estilo explicativo es tan constante como tu firma, pero a diferencia de esta, puedes rediseñarlo conscientemente.',
+    isPro: true,
+    proBadge: 'Test ASQ Automatizado - Requiere Pro'
+  },
+  {
+    id: 'patrones-cognitivos-complejos',
+    term: 'Patrones Cognitivos Complejos (Deep Cognitive Triad)',
+    shortDef: 'Análisis matricial de distorsiones entrelazadas y sesgos de confirmación en bucles de rumiación crónica.',
+    fullExplanation: 'Examina cómo la creencia en la permanencia alimenta la amplitud y refuerza la personalización destructiva en la tríada cognitiva de Beck-Seligman. La versión Pro incluye auditoría algorítmica para detectar puntos ciegos mediante IA socrática.',
+    practicalExample: 'Detectar cuándo un contratiempo profesional ("el cliente canceló") se expande automáticamente a una crisis relacional y existencial sin base empírica.',
+    tags: ['Avanzado', 'Diagnóstico IA', 'Patrones'],
+    seligmanQuote: 'Cuando desarmas el patrón central, los síntomas colaterales pierden su sustento emocional.',
+    isPro: true,
+    proBadge: 'Patrones Cognitivos Complejos - Requiere Pro'
   },
   {
     id: 'parada-del-pensamiento',
@@ -72,6 +85,8 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     fullExplanation: 'Si el costo de fallar es catastrófico, se impone el pesimismo prudente (auditar riesgos, prevenir contingencias). Si el costo es leve o transitorio, se impone el optimismo flexible (dar el salto, intentar, aprender del roce).',
     practicalExample: 'Pesimismo prudente al firmar una hipoteca de 30 años; optimismo flexible al invitar a un amigo a tomar un café.',
     tags: ['Toma de Decisiones', 'Metodología'],
-    seligmanQuote: 'El optimista que ignora el costo del fracaso es un temerario; el que lo calcula es un estratega.'
+    seligmanQuote: 'El optimista que ignora el costo del fracaso es un temerario; el que lo calcula es un estratega.',
+    isPro: true,
+    proBadge: 'Matriz Cuantitativa - Requiere Pro'
   }
 ];

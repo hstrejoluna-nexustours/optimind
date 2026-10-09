@@ -22,7 +22,7 @@ import {
   Unsubscribe 
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
-import { AbcdeEntry, MoodCheckIn } from '../types';
+import { AbcdeEntry, MoodCheckIn, PlanTier } from '../types';
 
 // Initialize Firebase App
 const app = initializeApp(firebaseConfig);
@@ -105,6 +105,7 @@ export interface UserProfileData {
   photoURL: string;
   streak: number;
   totalWorkouts: number;
+  plan?: PlanTier;
   bookmarkedTerms: string[];
   createdAt: string;
   updatedAt: string;
@@ -151,6 +152,7 @@ export async function syncUserProfile(
         photoURL: user.photoURL || data.photoURL || '',
         streak: Math.max(data.streak || 0, currentStreak),
         totalWorkouts: Math.max(data.totalWorkouts || 0, totalWorkouts),
+        plan: data.plan || 'free',
         bookmarkedTerms: Array.isArray(data.bookmarkedTerms) ? data.bookmarkedTerms : bookmarkedTerms,
         createdAt: data.createdAt || now,
         updatedAt: now
@@ -165,6 +167,7 @@ export async function syncUserProfile(
         photoURL: user.photoURL || '',
         streak: currentStreak,
         totalWorkouts: totalWorkouts,
+        plan: 'free',
         bookmarkedTerms: bookmarkedTerms,
         createdAt: now,
         updatedAt: now
@@ -174,6 +177,19 @@ export async function syncUserProfile(
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
+  }
+}
+
+// Update MicroSaaS Subscription Tier
+export async function updateUserSubscriptionPlan(userId: string, plan: PlanTier): Promise<void> {
+  const userDocRef = doc(db, 'users', userId);
+  try {
+    await setDoc(userDocRef, {
+      plan,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, `users/${userId}`);
   }
 }
 

@@ -18,7 +18,7 @@ import {
   Feather,
   Shuffle
 } from 'lucide-react';
-import { AbcdeEntry, RefutationalCards } from '../types';
+import { AbcdeEntry, RefutationalCards, PlanTier } from '../types';
 import { requestOptiMindCoach, CoachResponse } from '../services/optimindApi';
 import { sounds } from '../utils/audio';
 
@@ -28,6 +28,12 @@ interface AbcdeGymTabProps {
   onOpenThoughtStopper: () => void;
   savedEntries: AbcdeEntry[];
   onSelectSavedEntry: (entry: AbcdeEntry) => void;
+  currentTier?: PlanTier;
+  exercisesUsedThisMonth?: number;
+  monthlyLimit?: number;
+  bonusCredits?: number;
+  onTriggerUpgradeModal?: (reason: 'limit_reached' | 'pdf_export' | 'pro_feature' | 'ai_deep') => void;
+  onOpenClinicalReport?: () => void;
 }
 
 export const AbcdeGymTab: React.FC<AbcdeGymTabProps> = ({
@@ -36,6 +42,12 @@ export const AbcdeGymTab: React.FC<AbcdeGymTabProps> = ({
   onOpenThoughtStopper,
   savedEntries,
   onSelectSavedEntry,
+  currentTier = 'reverse_trial',
+  exercisesUsedThisMonth = 1,
+  monthlyLimit = 3,
+  bonusCredits = 0,
+  onTriggerUpgradeModal,
+  onOpenClinicalReport,
 }) => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
@@ -131,6 +143,16 @@ export const AbcdeGymTab: React.FC<AbcdeGymTabProps> = ({
   };
 
   const handleSave = () => {
+    // If user is on Free plan and has reached monthly limit on new entry
+    const totalAllowed = monthlyLimit + bonusCredits;
+    const isNew = !initialData?.id;
+    if (currentTier === 'free' && isNew && exercisesUsedThisMonth >= totalAllowed) {
+      if (onTriggerUpgradeModal) {
+        onTriggerUpgradeModal('limit_reached');
+        return;
+      }
+    }
+
     sounds.playBambooChime();
     const entry: AbcdeEntry = {
       id: initialData?.id || `entry-${Date.now()}`,
@@ -807,24 +829,46 @@ export const AbcdeGymTab: React.FC<AbcdeGymTabProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-between pt-4 border-t border-[#E6DFD5]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#E6DFD5]">
               <button
                 type="button"
                 onClick={() => setCurrentStep(4)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-[#647069] hover:bg-[#EAE4DB] transition flex items-center gap-1.5"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-medium text-[#647069] hover:bg-[#EAE4DB] transition flex items-center justify-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Volver a D</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleSave}
-                className="px-7 py-3.5 rounded-2xl bg-[#2E5A44] hover:bg-[#244836] text-[#FBF9F5] text-xs font-semibold tracking-wide transition shadow-tonal-sm flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>Guardar Ejercicio en tu Historial</span>
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sounds.playBambooChime();
+                    if (currentTier === 'free') {
+                      onTriggerUpgradeModal?.('pdf_export');
+                    } else {
+                      onOpenClinicalReport?.();
+                    }
+                  }}
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-[#FBF9F5] hover:bg-[#EAE4DB] text-[#2E5A44] border border-[#2E5A44]/30 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-tonal-sm"
+                >
+                  <span>📄 Exportar PDF / Reporte</span>
+                  {currentTier === 'free' && (
+                    <span className="text-[10px] bg-[#C86D51] text-white px-1.5 py-0.2 rounded font-bold">
+                      PRO
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#2E5A44] hover:bg-[#244836] text-[#FBF9F5] text-xs font-semibold tracking-wide transition shadow-tonal-sm flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Guardar Ejercicio en tu Historial</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

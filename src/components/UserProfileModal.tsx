@@ -4,30 +4,30 @@ import {
   LogIn, 
   LogOut, 
   Cloud, 
-  CloudCheck, 
   Flame, 
   Brain, 
-  Calendar, 
   ShieldCheck, 
   Sparkles, 
-  UploadCloud, 
   Download, 
   TrendingDown, 
   CheckCircle2, 
-  User as UserIcon,
-  HelpCircle,
-  RefreshCw,
-  Compass
+  User as UserIcon, 
+  RefreshCw, 
+  Compass, 
+  Printer, 
+  Zap,
+  Award
 } from 'lucide-react';
 import { User } from 'firebase/auth';
 import { UserProfileData } from '../services/firebase';
-import { AbcdeEntry, MoodCheckIn } from '../types';
+import { AbcdeEntry, MoodCheckIn, PlanTier } from '../types';
 
 interface UserProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
   userProfile: UserProfileData | null;
+  currentPlan: PlanTier;
   onLogin: () => Promise<void>;
   onLogout: () => Promise<void>;
   entries: AbcdeEntry[];
@@ -35,6 +35,8 @@ interface UserProfileModalProps {
   streak: number;
   onSyncLocalToCloud: () => Promise<void>;
   onOpenDataModal: () => void;
+  onOpenCheckout: (plan: PlanTier) => void;
+  onOpenClinicalReport: () => void;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({
@@ -42,13 +44,16 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   onClose,
   user,
   userProfile,
+  currentPlan,
   onLogin,
   onLogout,
   entries,
   moods,
   streak,
   onSyncLocalToCloud,
-  onOpenDataModal
+  onOpenDataModal,
+  onOpenCheckout,
+  onOpenClinicalReport
 }) => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -80,10 +85,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     }
   };
 
-  // Calculate psychological resilience metrics
+  // Psychological resilience metrics
   const totalCompleted = entries.length;
   
-  // Average drop from consequence to energization
   let avgDrop = 0;
   if (entries.length > 0) {
     const drops = entries.map(e => {
@@ -97,7 +101,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   // Explanatory style breakdown
   const permanentCount = entries.filter(e => e.classifications?.permanent).length;
   const universalCount = entries.filter(e => e.classifications?.universal).length;
-  const internalCount = entries.filter(e => e.classifications?.internal).length;
 
   const tempOptimismPct = entries.length > 0 
     ? Math.round(((entries.length - permanentCount) / entries.length) * 100) 
@@ -118,7 +121,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
             <div>
               <h3 className="font-serif text-lg font-medium text-[#333E38]">
-                Panel de Usuario & Resiliencia
+                Panel de Usuario & MicroSaaS
               </h3>
               <p className="text-xs text-[#647069]">
                 Tu refugio y datos persistentes en OptiMind
@@ -135,6 +138,69 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
         {/* Body */}
         <div className="p-6 space-y-6">
+          {/* Subscription Tier Card */}
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-[#F3EEE7] to-[#EAE3D9] border border-[#E6DFD5] space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#647069]">
+                Nivel de Membresía MicroSaaS
+              </span>
+              {currentPlan === 'pro' ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FBF9F5] bg-[#2E5A44] px-2.5 py-0.5 rounded-full shadow-tonal-sm">
+                  💎 Santuario Pro Activo
+                </span>
+              ) : currentPlan === 'clinical' ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FBF9F5] bg-[#C86D51] px-2.5 py-0.5 rounded-full shadow-tonal-sm">
+                  🏥 Licencia Clínica Activa
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#55635C] bg-[#E6DFD5] px-2.5 py-0.5 rounded-full">
+                  🌱 Plan Semilla (Gratis)
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <div>
+                <h4 className="font-serif text-base font-bold text-[#333E38]">
+                  {currentPlan === 'pro' 
+                    ? 'Acceso Ilimitado & Cloud Firestore' 
+                    : currentPlan === 'clinical'
+                    ? 'Licencia Profesional para Terapeutas'
+                    : 'Plan Básico para Exploración'}
+                </h4>
+                <p className="text-xs text-[#55635C] mt-0.5">
+                  {currentPlan === 'free' 
+                    ? '5 ejercicios al mes. Mejora para sincronización sin límites e informes clínicos.'
+                    : 'Registros ilimitados, tutor IA cognitivo y respaldo continuo.'}
+                </p>
+              </div>
+
+              {currentPlan === 'free' ? (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenCheckout('pro');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#2E5A44] hover:bg-[#254937] text-[#FBF9F5] text-xs font-semibold transition shrink-0 shadow-tonal-sm flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Mejorar a Pro ($9/m)</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenClinicalReport();
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#FBF9F5] hover:bg-[#F3EEE7] text-[#2E5A44] border border-[#2E5A44]/30 text-xs font-semibold transition shrink-0 flex items-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Ver Informe Clínico</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Auth Status Card */}
           {user ? (
             <div className="p-5 rounded-2xl bg-[#F3EEE7] border border-[#E6DFD5] space-y-4">
@@ -144,10 +210,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     <img 
                       src={user.photoURL} 
                       alt={user.displayName || 'Usuario'} 
-                      className="w-13 h-13 rounded-2xl object-cover ring-2 ring-[#2E5A44]/20 shadow-tonal-sm"
+                      className="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#2E5A44]/20 shadow-tonal-sm"
                     />
                   ) : (
-                    <div className="w-13 h-13 rounded-2xl bg-[#2E5A44] text-[#FBF9F5] flex items-center justify-center font-serif text-xl font-bold">
+                    <div className="w-12 h-12 rounded-2xl bg-[#2E5A44] text-[#FBF9F5] flex items-center justify-center font-serif text-lg font-bold">
                       {user.displayName ? user.displayName.charAt(0) : 'U'}
                     </div>
                   )}
@@ -162,7 +228,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     </div>
                     <p className="text-xs text-[#647069] mt-0.5">{user.email}</p>
                     <p className="text-[11px] text-[#55635C] mt-1 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#2E5A44]" /> Base de datos Firestore sincronizada en tiempo real
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#2E5A44]" /> Cloud Firestore sincronizado en tiempo real
                     </p>
                   </div>
                 </div>
@@ -214,7 +280,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 disabled={isLoggingIn}
                 className="w-full py-2.5 px-4 rounded-xl bg-[#2E5A44] hover:bg-[#254937] text-[#FBF9F5] font-medium text-sm transition flex items-center justify-center gap-2.5 shadow-tonal-sm"
               >
-                {/* Google "G" SVG */}
                 <svg className="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -315,21 +380,28 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* Backup & Portability Options */}
+          {/* Clinical Report & JSON Backup Actions */}
           <div className="pt-2 border-t border-[#E6DFD5] flex items-center justify-between gap-4">
+            <button
+              onClick={() => {
+                onClose();
+                onOpenClinicalReport();
+              }}
+              className="text-xs text-[#2E5A44] hover:underline flex items-center gap-1.5 font-medium"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Ver Informe Clínico</span>
+            </button>
             <button
               onClick={() => {
                 onClose();
                 onOpenDataModal();
               }}
-              className="text-xs text-[#2E5A44] hover:underline flex items-center gap-1.5 font-medium"
+              className="text-xs text-[#55635C] hover:underline flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Exportar / Importar respaldo JSON</span>
+              <span>Copia JSON</span>
             </button>
-            <span className="text-[11px] text-[#647069]">
-              {moods.length} registros anímicos
-            </span>
           </div>
         </div>
 

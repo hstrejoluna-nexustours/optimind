@@ -11,7 +11,7 @@ import {
   Calendar,
   Feather
 } from 'lucide-react';
-import { MoodCheckIn } from '../types';
+import { MoodCheckIn, PlanTier } from '../types';
 import { DAILY_REFLECTIONS } from '../data/initialData';
 import { sounds } from '../utils/audio';
 
@@ -20,6 +20,12 @@ interface SantuarioTabProps {
   onGoToWiki: () => void;
   onSaveMoodCheckIn: (checkIn: MoodCheckIn) => void;
   recentMoods: MoodCheckIn[];
+  currentTier?: PlanTier;
+  trialDaysLeft?: number;
+  exercisesUsedThisMonth?: number;
+  monthlyLimit?: number;
+  bonusCredits?: number;
+  onOpenCheckout?: (plan: PlanTier) => void;
 }
 
 export const SantuarioTab: React.FC<SantuarioTabProps> = ({
@@ -27,6 +33,12 @@ export const SantuarioTab: React.FC<SantuarioTabProps> = ({
   onGoToWiki,
   onSaveMoodCheckIn,
   recentMoods,
+  currentTier = 'reverse_trial',
+  trialDaysLeft = 14,
+  exercisesUsedThisMonth = 1,
+  monthlyLimit = 3,
+  bonusCredits = 0,
+  onOpenCheckout,
 }) => {
   const [moodScore, setMoodScore] = useState<number>(7);
   const [moodEnergy, setMoodEnergy] = useState<MoodCheckIn['energy']>('sereno');
@@ -59,9 +71,140 @@ export const SantuarioTab: React.FC<SantuarioTabProps> = ({
   };
 
   const feedback = getMoodColorFeedback(moodScore);
+  const totalAllowed = monthlyLimit + bonusCredits;
+  const isUnlimited = currentTier === 'reverse_trial' || currentTier === 'pro' || currentTier === 'executive';
 
   return (
-    <div className="space-y-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <div className="space-y-8 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      {/* Reverse Trial / MicroSaaS Status Banner */}
+      {currentTier === 'reverse_trial' && (
+        <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-[#2E5A44]/15 via-[#F3EEE7] to-[#C86D51]/15 border border-[#2E5A44]/30 shadow-tonal-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[#2E5A44] text-[#FBF9F5] flex items-center justify-center shrink-0 shadow-tonal-sm">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-serif text-sm sm:text-base font-bold text-[#333E38]">
+                  Reverse Trial Activo
+                </span>
+                <span className="text-[11px] font-bold bg-[#2E5A44] text-[#FBF9F5] px-2 py-0.5 rounded-full">
+                  {trialDaysLeft} Días Restantes
+                </span>
+              </div>
+              <p className="text-xs text-[#55635C] mt-0.5">
+                Tienes <strong>{trialDaysLeft} días restantes de acceso Pro sin restricciones</strong>: ejercicios ilimitados, IA socrática y reportes clínicos completos.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onOpenCheckout && onOpenCheckout('pro')}
+            className="w-full sm:w-auto px-4.5 py-2.5 rounded-xl bg-[#2E5A44] hover:bg-[#254937] text-[#FBF9F5] text-xs font-semibold transition shrink-0 shadow-tonal-sm flex items-center justify-center gap-2"
+          >
+            <span>Asegurar Pase Pro (-25%)</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {currentTier === 'free' && (
+        <div className="rounded-2xl p-4 sm:p-5 bg-[#F3EEE7] border border-[#E6DFD5] shadow-tonal-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[#C86D51]/20 text-[#C86D51] flex items-center justify-center shrink-0">
+              <Brain className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-serif text-sm sm:text-base font-bold text-[#333E38]">
+                  Plan Free / Starter
+                </span>
+                <span className="text-[11px] font-semibold bg-[#E6DFD5] text-[#55635C] px-2 py-0.5 rounded-full">
+                  {exercisesUsedThisMonth} / {totalAllowed} Usados
+                </span>
+              </div>
+              <p className="text-xs text-[#55635C] mt-0.5">
+                Has consumido {exercisesUsedThisMonth} de tus {totalAllowed} ejercicios gratuitos mensuales. Actualiza a Pro para sesiones ilimitadas.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onOpenCheckout && onOpenCheckout('pro')}
+            className="w-full sm:w-auto px-4.5 py-2.5 rounded-xl bg-[#2E5A44] hover:bg-[#254937] text-[#FBF9F5] text-xs font-semibold transition shrink-0 shadow-tonal-sm flex items-center justify-center gap-2"
+          >
+            <span>Mejorar a Pro</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Usage Meter Widget & Streak Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Card 1: Usage Meter */}
+        <div className="sm:col-span-2 bg-[#F3EEE7] rounded-2xl p-5 border border-[#E6DFD5] shadow-tonal flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-[#55635C] uppercase tracking-wider">
+              Medidor de Uso Mensual
+            </span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#FBF9F5] text-[#2E5A44] border border-[#E6DFD5]">
+              {isUnlimited ? 'Ilimitado (Pro Trial)' : `${exercisesUsedThisMonth} / ${totalAllowed} Ejercicios`}
+            </span>
+          </div>
+
+          <div className="space-y-2 my-1">
+            <div className="flex justify-between text-xs text-[#333E38]">
+              <span className="font-serif text-sm">
+                {isUnlimited ? 'Práctica Sin Restricciones' : `Ejercicios consumidos este mes: ${exercisesUsedThisMonth} / ${totalAllowed} (Plan Free)`}
+              </span>
+              <span className="font-semibold text-xs text-[#647069]">
+                {isUnlimited ? '100% Disponible' : `${Math.round((exercisesUsedThisMonth / totalAllowed) * 100)}%`}
+              </span>
+            </div>
+
+            <div className="w-full h-3 bg-[#E6DFD5] rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${
+                  isUnlimited ? 'w-full bg-[#2E5A44]' : 'bg-[#C86D51]'
+                }`}
+                style={{ width: isUnlimited ? '100%' : `${Math.min(100, (exercisesUsedThisMonth / totalAllowed) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-[#647069] pt-2 border-t border-[#E6DFD5]/70 mt-2">
+            <span>
+              {isUnlimited 
+                ? 'Pase de Resiliencia activo: registra todos los contratiempos que necesites.' 
+                : `Te quedan ${Math.max(0, totalAllowed - exercisesUsedThisMonth)} ejercicio(s) este mes (+${bonusCredits} bono).`}
+            </span>
+            {!isUnlimited && onOpenCheckout && (
+              <button 
+                onClick={() => onOpenCheckout('pro')}
+                className="text-[#2E5A44] font-bold hover:underline shrink-0"
+              >
+                Desbloquear Ilimitado
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Card 2: Mental Check-in Status */}
+        <div className="bg-[#F3EEE7] rounded-2xl p-5 border border-[#E6DFD5] shadow-tonal flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#55635C]">
+            <span className="uppercase tracking-wider">Historial Activo</span>
+            <span className="text-[#2E5A44]">{recentMoods.length} registros</span>
+          </div>
+          <div className="my-2">
+            <span className="text-[11px] text-[#647069] block">Último estado:</span>
+            <span className="font-serif text-lg text-[#333E38] block capitalize">
+              {recentMoods[0]?.energy || 'Sereno'} ({recentMoods[0]?.score || 7}/10)
+            </span>
+          </div>
+          <div className="text-[11px] text-[#2E5A44] font-medium flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Santuario en sintonía</span>
+          </div>
+        </div>
+      </div>
       {/* Gentle Hero Sanctuary Card */}
       <div className="relative overflow-hidden rounded-[1.75rem] bg-[#F3EEE7] border border-[#E6DFD5] p-8 sm:p-11 shadow-tonal">
         <div className="relative z-10 max-w-2xl">

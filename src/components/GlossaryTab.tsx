@@ -11,16 +11,20 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { GLOSSARY_TERMS } from '../data/glossaryData';
-import { GlossaryTerm } from '../types';
+import { GlossaryTerm, PlanTier } from '../types';
 
 interface GlossaryTabProps {
   bookmarkedIds: string[];
   onToggleBookmark: (termId: string) => void;
+  currentPlan?: PlanTier;
+  onOpenCheckout?: (plan: PlanTier) => void;
 }
 
 export const GlossaryTab: React.FC<GlossaryTabProps> = ({
   bookmarkedIds,
   onToggleBookmark,
+  currentPlan = 'free',
+  onOpenCheckout,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('todos');
@@ -160,11 +164,21 @@ export const GlossaryTab: React.FC<GlossaryTabProps> = ({
                     </button>
                   </div>
 
-                  <h3 className="font-serif text-xl text-[#333E38]">
-                    {item.term}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-serif text-xl text-[#333E38]">
+                      {item.term}
+                    </h3>
+                  </div>
 
-                  <p className="text-xs sm:text-sm text-[#55635C] mt-2 leading-relaxed">
+                  {item.isPro && (
+                    <div className="mb-2.5">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-[#2E5A44]/10 text-[#2E5A44] border border-[#2E5A44]/25 px-2.5 py-0.5 rounded-full shadow-tonal-sm">
+                        💎 {item.proBadge || 'Característica Pro'}
+                      </span>
+                    </div>
+                  )}
+
+                  <p className="text-xs sm:text-sm text-[#55635C] mt-1 leading-relaxed">
                     {item.shortDef}
                   </p>
 
@@ -192,6 +206,26 @@ export const GlossaryTab: React.FC<GlossaryTabProps> = ({
                       {item.seligmanQuote && (
                         <div className="text-[11px] text-[#647069] italic pt-1">
                           &ldquo;{item.seligmanQuote}&rdquo; — M. Seligman
+                        </div>
+                      )}
+
+                      {item.isPro && (
+                        <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#2E5A44]/10 to-[#C86D51]/10 border border-[#2E5A44]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs mt-2">
+                          <span className="text-[#333E38]">
+                            Módulo de diagnóstico algorítmico y plantillas de alta fidelidad disponible en <strong>OptiMind Pro</strong>.
+                          </span>
+                          {currentPlan === 'free' && onOpenCheckout && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenCheckout('pro');
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-[#2E5A44] hover:bg-[#254937] text-[#FBF9F5] font-semibold text-[11px] shrink-0 transition"
+                            >
+                              Ver Plan Pro
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

@@ -70,6 +70,8 @@ export interface GlossaryTerm {
   practicalExample: string;
   tags: string[];
   seligmanQuote?: string;
+  isPro?: boolean;
+  proBadge?: string;
 }
 
 export interface WikiArticle {
@@ -101,4 +103,27 @@ export interface QuizQuestion {
     universal: boolean;
     internal: boolean;
   };
+}
+
+export type PlanTier = 'free' | 'reverse_trial' | 'pro' | 'executive' | 'clinical';
+
+export interface PricingPlan {
+  id: PlanTier;
+  name: string;
+  badge?: string;
+  priceMonthly: number;
+  priceYearly: number;
+  description: string;
+  features: string[];
+  notIncluded?: string[];
+  ctaText: string;
+  popular?: boolean;
+}
+
+export interface VanWestendorpResponse {
+  tooCheap: number;     // Demasiado barato (duda de calidad)
+  cheap: number;        // Ganga (gran oferta)
+  expensive: number;    // Caro (aún lo comprarías)
+  tooExpensive: number; // Demasiado caro (prohibitivo)
+  submittedAt: string;
 }

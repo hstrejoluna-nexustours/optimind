@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { AbcdeEntry, MoodCheckIn } from './types';
+import { AbcdeEntry, MoodCheckIn, PlanTier, VanWestendorpResponse } from './types';
 import { INITIAL_ENTRIES } from './data/initialData';
 import { Navbar, AppTab } from './components/Navbar';
 import { SantuarioTab } from './components/SantuarioTab';
 import { WikiTab } from './components/WikiTab';
 import { GlossaryTab } from './components/GlossaryTab';
 import { AbcdeGymTab } from './components/AbcdeGymTab';
+import { MicroSaasLandingTab } from './components/MicroSaasLandingTab';
+import { CheckoutModal } from './components/CheckoutModal';
+import { ClinicalReportModal } from './components/ClinicalReportModal';
 import { ThoughtStopperModal } from './components/ThoughtStopperModal';
 import { JsonDataModal } from './components/JsonDataModal';
 import { UserProfileModal } from './components/UserProfileModal';
+import { UpgradeModal, UpgradeTriggerReason } from './components/UpgradeModal';
+import { DevTierSwitcher } from './components/DevTierSwitcher';
 import { 
   auth, 
   loginWithGoogle, 
@@ -21,13 +26,18 @@ import {
   saveUserMoodToCloud, 
   saveBookmarksToCloud, 
   migrateLocalDataToCloud, 
+  updateUserSubscriptionPlan,
   UserProfileData 
 } from './services/firebase';
-import { Cloud, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
+import { Cloud, CheckCircle2, ShieldCheck, Sparkles, Award } from 'lucide-react';
 
 const STORAGE_ENTRIES_KEY = 'optimind_entries_v2';
 const STORAGE_MOODS_KEY = 'optimind_moods_v2';
 const STORAGE_BOOKMARKS_KEY = 'optimind_bookmarks_v2';
+const STORAGE_PLAN_KEY = 'optimind_plan_v2';
+const STORAGE_USER_TIER_KEY = 'user_tier';
+const STORAGE_TRIAL_DAYS_KEY = 'trial_days_left';
+const STORAGE_BONUS_CREDITS_KEY = 'optimind_bonus_credits_v1';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<AppTab>('santuario');
@@ -37,6 +47,58 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // MicroSaaS Plan Tier State (Default: reverse_trial, 14 days)
+  const [currentPlan, setCurrentPlan] = useState<PlanTier>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(STORAGE_USER_TIER_KEY) || localStorage.getItem(STORAGE_PLAN_KEY);
+        if (stored === 'reverse_trial' || stored === 'free' || stored === 'pro' || stored === 'executive' || stored === 'clinical') {
+          return stored as PlanTier;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return 'reverse_trial';
+  });
+
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(STORAGE_TRIAL_DAYS_KEY);
+        if (stored) return parseInt(stored, 10);
+      } catch (e) {}
+    }
+    return 14;
+  });
+
+  const [bonusCredits, setBonusCredits] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(STORAGE_BONUS_CREDITS_KEY);
+        if (stored) return parseInt(stored, 10);
+      } catch (e) {}
+    }
+    return 0;
+  });
+
+  // Contextual Paywall Modal State
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeModalReason, setUpgradeModalReason] = useState<UpgradeTriggerReason>('limit_reached');
+  const [hasCompletedVanWestendorp, setHasCompletedVanWestendorp] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return !!localStorage.getItem('optimind_van_westendorp_v1');
+      } catch (e) {}
+    }
+    return false;
+  });
+
+  // Modals for MicroSaaS
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutTargetPlan, setCheckoutTargetPlan] = useState<PlanTier>('pro');
+  const [isClinicalReportOpen, setIsClinicalReportOpen] = useState(false);
 
   // ABCDE Entries State (Initialized from localStorage fallback)
   const [entries, setEntries] = useState<AbcdeEntry[]>(() => {
@@ -107,7 +169,7 @@ export default function App() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(prev => prev === msg ? null : prev);
-    }, 3500);
+    }, 3800);
   };
 
   // Local storage backup effects
@@ -135,6 +197,31 @@ export default function App() {
     }
   }, [bookmarks]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_PLAN_KEY, currentPlan);
+      localStorage.setItem(STORAGE_USER_TIER_KEY, currentPlan);
+    } catch (e) {
+      console.error('Failed to save plan to localStorage', e);
+    }
+  }, [currentPlan]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_TRIAL_DAYS_KEY, trialDaysLeft.toString());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [trialDaysLeft]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_BONUS_CREDITS_KEY, bonusCredits.toString());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [bonusCredits]);
+
   // Firebase Auth Lifecycle & Real-time Firestore Subscriptions
   useEffect(() => {
     let unsubscribeEntries: (() => void) | undefined;
@@ -145,33 +232,32 @@ export default function App() {
       setIsAuthLoading(false);
 
       if (currentUser) {
-        // Compute streak & total workouts
         const currentStreak = Math.max(3, entries.length + moods.length);
         
         try {
-          // Initialize or load Firestore profile
           const profile = await syncUserProfile(currentUser, currentStreak, entries.length, bookmarks);
           setUserProfile(profile);
+
+          if (profile.plan) {
+            setCurrentPlan(profile.plan);
+          }
 
           if (profile.bookmarkedTerms && profile.bookmarkedTerms.length > 0) {
             setBookmarks(profile.bookmarkedTerms);
           }
 
-          // Subscribe to Cloud ABCDE Entries
           unsubscribeEntries = subscribeToUserEntries(
             currentUser.uid,
             (cloudEntries) => {
               if (cloudEntries && cloudEntries.length > 0) {
                 setEntries(cloudEntries);
               } else if (entries.length > 0) {
-                // If cloud is empty but local has data, migrate them automatically
                 migrateLocalDataToCloud(currentUser.uid, entries, moods, bookmarks);
               }
             },
             (err) => console.warn('Cloud entries subscription error:', err)
           );
 
-          // Subscribe to Cloud Mood Check-Ins
           unsubscribeMoods = subscribeToUserMoods(
             currentUser.uid,
             (cloudMoods) => {
@@ -182,7 +268,7 @@ export default function App() {
             (err) => console.warn('Cloud moods subscription error:', err)
           );
 
-          showToast(`🌿 Sesión iniciada: Bienvenido(a) ${currentUser.displayName || ''}`);
+          showToast(`🌿 Sesión iniciada: ${currentUser.displayName || 'Bienvenido'}`);
         } catch (error) {
           console.error('Error synchronizing with Firestore:', error);
         }
@@ -243,10 +329,9 @@ export default function App() {
     if (user) {
       try {
         await saveUserEntryToCloud(user.uid, newEntry);
-        // Also update profile streak and workout counter
         const nextStreak = Math.max(3, entries.length + moods.length + 1);
         await syncUserProfile(user, nextStreak, entries.length + 1, bookmarks);
-        showToast('🧠 Ejercicio ABCDE guardado y respaldado en Cloud Firestore');
+        showToast('🧠 Ejercicio ABCDE respaldado en Cloud Firestore');
       } catch (e) {
         console.error('Failed to save entry to cloud', e);
       }
@@ -284,7 +369,7 @@ export default function App() {
     try {
       const signedInUser = await loginWithGoogle();
       setIsProfileModalOpen(false);
-      showToast(`🌿 Sincronizando datos de ${signedInUser.displayName || 'tu cuenta'}...`);
+      showToast(`🌿 Conectado con ${signedInUser.displayName || 'Google'}`);
     } catch (e) {
       console.error(e);
     }
@@ -309,6 +394,61 @@ export default function App() {
     showToast('☁️ Todos tus datos locales han sido respaldados en Firestore');
   };
 
+  // MicroSaaS Subscription Handler
+  const handleOpenCheckout = (plan: PlanTier) => {
+    setCheckoutTargetPlan(plan);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleConfirmUpgrade = async (plan: PlanTier) => {
+    setCurrentPlan(plan);
+    if (user) {
+      try {
+        await updateUserSubscriptionPlan(user.uid, plan);
+        setUserProfile(prev => prev ? { ...prev, plan } : null);
+      } catch (e) {
+        console.error('Failed to update subscription in Firestore:', e);
+      }
+    }
+    showToast(`💎 ¡Plan ${plan === 'pro' ? 'Pro Resilience Pass' : plan === 'executive' ? 'Executive Coach' : 'Free'} activado!`);
+  };
+
+  // Contextual Paywall Upgrade Trigger Handler
+  const handleTriggerUpgradeModal = (reason: UpgradeTriggerReason) => {
+    setUpgradeModalReason(reason);
+    setIsUpgradeModalOpen(true);
+  };
+
+  const handleStartProTrial = () => {
+    setCurrentPlan('pro');
+    setIsUpgradeModalOpen(false);
+    showToast('💎 ¡Pase de Resiliencia Pro activado!');
+  };
+
+  // Van Westendorp Survey Handler
+  const handleSurveyCompleted = (survey: VanWestendorpResponse) => {
+    setHasCompletedVanWestendorp(true);
+    setBonusCredits(prev => prev + 1);
+    showToast('✨ Encuesta completada: +1 ejercicio mensual adicional desbloqueado');
+  };
+
+  // Dev Tier Switcher Handlers
+  const handleSetTier = (tier: PlanTier) => {
+    setCurrentPlan(tier);
+    showToast(`⚙️ Modo QA: Nivel cambiado a ${tier}`);
+  };
+
+  const handleSetTrialDays = (days: number) => {
+    setTrialDaysLeft(days);
+  };
+
+  const handleResetUsage = () => {
+    showToast('⚙️ Modo QA: Contador de uso reiniciado');
+  };
+
+  // Exercises used this month (calculated)
+  const exercisesUsedThisMonth = Math.max(1, entries.length);
+
   // Resilience streak calculation
   const streak = userProfile?.streak 
     ? Math.max(userProfile.streak, entries.length + moods.length) 
@@ -316,7 +456,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#333E38] selection:bg-[#2E5A44]/15 selection:text-[#2E5A44] transition-colors relative">
-      {/* Top Persistent Header & Navigation (4 Tabs) */}
+      {/* Top Persistent Header & Navigation (5 Tabs) */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -324,6 +464,9 @@ export default function App() {
         onOpenDataModal={() => setIsDataModalOpen(true)}
         user={user}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        currentPlan={currentPlan}
+        trialDaysLeft={trialDaysLeft}
+        onOpenCheckout={handleOpenCheckout}
       />
 
       {/* Floating Calm Toast Notification */}
@@ -347,6 +490,12 @@ export default function App() {
             onGoToWiki={() => setCurrentTab('wiki')}
             onSaveMoodCheckIn={handleSaveMoodCheckIn}
             recentMoods={moods}
+            currentTier={currentPlan}
+            trialDaysLeft={trialDaysLeft}
+            exercisesUsedThisMonth={exercisesUsedThisMonth}
+            monthlyLimit={3}
+            bonusCredits={bonusCredits}
+            onOpenCheckout={handleOpenCheckout}
           />
         )}
 
@@ -363,6 +512,8 @@ export default function App() {
           <GlossaryTab
             bookmarkedIds={bookmarks}
             onToggleBookmark={handleToggleBookmark}
+            currentPlan={currentPlan}
+            onOpenCheckout={handleOpenCheckout}
           />
         )}
 
@@ -373,6 +524,27 @@ export default function App() {
             onOpenThoughtStopper={() => setIsThoughtStopperOpen(true)}
             savedEntries={entries}
             onSelectSavedEntry={handleSelectSavedEntry}
+            currentTier={currentPlan}
+            exercisesUsedThisMonth={exercisesUsedThisMonth}
+            monthlyLimit={3}
+            bonusCredits={bonusCredits}
+            onTriggerUpgradeModal={handleTriggerUpgradeModal}
+            onOpenClinicalReport={() => setIsClinicalReportOpen(true)}
+          />
+        )}
+
+        {currentTab === 'microsaas' && (
+          <MicroSaasLandingTab
+            currentPlan={currentPlan}
+            onSelectPlanToUpgrade={handleOpenCheckout}
+            onGoToGym={() => {
+              setActiveGymEntry(undefined);
+              setCurrentTab('gimnasio');
+            }}
+            onOpenClinicalReport={() => setIsClinicalReportOpen(true)}
+            onSurveyCompleted={handleSurveyCompleted}
+            hasCompletedSurvey={hasCompletedVanWestendorp}
+            bonusCreditsEarned={bonusCredits}
           />
         )}
       </main>
@@ -383,6 +555,7 @@ export default function App() {
         onClose={() => setIsProfileModalOpen(false)}
         user={user}
         userProfile={userProfile}
+        currentPlan={currentPlan}
         onLogin={handleLogin}
         onLogout={handleLogout}
         entries={entries}
@@ -390,6 +563,46 @@ export default function App() {
         streak={streak}
         onSyncLocalToCloud={handleSyncLocalToCloud}
         onOpenDataModal={() => setIsDataModalOpen(true)}
+        onOpenCheckout={handleOpenCheckout}
+        onOpenClinicalReport={() => setIsClinicalReportOpen(true)}
+      />
+
+      {/* MicroSaaS Checkout Modal */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        targetPlan={checkoutTargetPlan}
+        onConfirmUpgrade={handleConfirmUpgrade}
+        userEmail={user?.email || undefined}
+      />
+
+      {/* Contextual Paywall Upgrade Modal */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        onStartProTrial={handleStartProTrial}
+        reason={upgradeModalReason}
+        trialDaysLeft={trialDaysLeft}
+      />
+
+      {/* Dev / QA Tier Switcher for Testing */}
+      <DevTierSwitcher
+        currentTier={currentPlan}
+        trialDaysLeft={trialDaysLeft}
+        bonusCredits={bonusCredits}
+        onSetTier={handleSetTier}
+        onSetTrialDays={handleSetTrialDays}
+        onResetUsage={handleResetUsage}
+      />
+
+      {/* Clinical Report Printable Modal */}
+      <ClinicalReportModal
+        isOpen={isClinicalReportOpen}
+        onClose={() => setIsClinicalReportOpen(false)}
+        userProfile={userProfile}
+        entries={entries}
+        moods={moods}
+        streak={streak}
       />
 
       {/* Thought Stopper Modal */}
@@ -419,7 +632,7 @@ export default function App() {
               </div>
               <div>
                 <span className="font-serif text-lg text-[#333E38] block leading-none">
-                  OptiMind
+                  OptiMind MicroSaaS
                 </span>
                 <span className="text-[11px] text-[#647069]">
                   Santuario & Gimnasio de Optimismo Aprendido
@@ -427,8 +640,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Quick 4-tab anchor links */}
-            <div className="flex flex-wrap items-center gap-5 text-xs text-[#55635C]">
+            {/* Quick 5-tab anchor links */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-5 text-xs text-[#55635C]">
               <button 
                 onClick={() => setCurrentTab('santuario')} 
                 className="hover:text-[#2E5A44] transition-colors"
@@ -453,13 +666,19 @@ export default function App() {
               >
                 🧠 Gimnasio ABCDE
               </button>
+              <button 
+                onClick={() => setCurrentTab('microsaas')} 
+                className="text-[#C86D51] font-semibold hover:text-[#b1583d] transition-colors"
+              >
+                💎 Planes & Precios
+              </button>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-[#647069]">
             <p className="leading-relaxed max-w-xl">
-              Basado en las investigaciones de Martin Seligman (Universidad de Pensilvania). 
-              Diseñado con principios de <em>Calm Technology</em>, Diseño Emocional (Don Norman) y accesibilidad WCAG AA. Cero positivismo tóxico.
+              Plataforma MicroSaaS fundamentada en el marco cognitivo del Dr. Martin Seligman (UPenn). 
+              Diseñado con principios de <em>Calm Technology</em>, Diseño Emocional y persistencia Zero-Trust en Google Cloud Firestore.
             </p>
             <div className="flex items-center gap-2 font-medium text-[#2E5A44]">
               <Cloud className="w-3.5 h-3.5" />
