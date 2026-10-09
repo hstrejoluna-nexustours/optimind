@@ -1,0 +1,173 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Perfil y progreso acumulado del usuario en OptiMind",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Identificador único de autenticación de Firebase del usuario",
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Nombre visible del usuario",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Correo electrónico del usuario",
+          "maxLength": 150
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL del avatar de Google del usuario",
+          "maxLength": 500
+        },
+        "streak": {
+          "type": "number",
+          "description": "Racha de días de resiliencia y práctica"
+        },
+        "totalWorkouts": {
+          "type": "number",
+          "description": "Total de sesiones ABCDE completadas"
+        },
+        "bookmarkedTerms": {
+          "type": "array",
+          "description": "IDs de términos guardados del glosario"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Fecha ISO de creación de la cuenta"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Fecha ISO de última actividad"
+        }
+      },
+      "required": ["userId", "email", "streak"]
+    },
+    "AbcdeEntry": {
+      "title": "AbcdeEntry",
+      "description": "Registro completo de reestructuración cognitiva del método ABCDE",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID del registro",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID del propietario del registro",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Título o síntesis del contratiempo",
+          "maxLength": 200
+        },
+        "adversity": {
+          "type": "string",
+          "description": "Descripción objetiva del hecho (A)",
+          "maxLength": 2500
+        },
+        "category": {
+          "type": "string",
+          "description": "Categoría vital de la adversidad",
+          "enum": ["trabajo", "relaciones", "salud_habitos", "estudio", "finanzas", "personal"]
+        },
+        "belief": {
+          "type": "string",
+          "description": "Creencia automática pesimista (B)",
+          "maxLength": 2500
+        },
+        "classifications": {
+          "type": "object",
+          "description": "Dimensiones del estilo explicativo (Permanente, Universal, Interno)"
+        },
+        "consequences": {
+          "type": "object",
+          "description": "Consecuencias emocionales y de conducta iniciales (C)"
+        },
+        "refutations": {
+          "type": "object",
+          "description": "Las 4 cartas refutacionales del Dr. Seligman (D)"
+        },
+        "energization": {
+          "type": "object",
+          "description": "Intensidad resultante y plan de acción constructivo (E)"
+        },
+        "costOfFailure": {
+          "type": "string",
+          "description": "Evaluación del costo de fracaso para optimismo flexible",
+          "enum": ["low", "moderate", "high"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Fecha ISO de registro"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Fecha ISO de última modificación"
+        }
+      },
+      "required": ["id", "userId", "adversity", "belief", "classifications", "consequences", "refutations", "energization"]
+    },
+    "MoodCheckIn": {
+      "title": "MoodCheckIn",
+      "description": "Registro diario de estado anímico y energía en el Santuario",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID del registro anímico",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID del usuario",
+          "maxLength": 128
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Marca de tiempo del check-in"
+        },
+        "score": {
+          "type": "number",
+          "description": "Puntaje de serenidad (1 a 10)"
+        },
+        "energy": {
+          "type": "string",
+          "description": "Cualidad de la energía",
+          "enum": ["calma", "sereno", "inquieto", "agotado"]
+        },
+        "note": {
+          "type": "string",
+          "description": "Reflexión o intención consciente opcional",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Fecha de registro"
+        }
+      },
+      "required": ["id", "userId", "score", "energy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Almacena los perfiles, estadísticas de resiliencia y configuración del usuario"
+    },
+    "/users/{userId}/entries/{entryId}": {
+      "schema": "AbcdeEntry",
+      "description": "Almacena los ejercicios y reestructuraciones cognitivas ABCDE del usuario"
+    },
+    "/users/{userId}/moods/{moodId}": {
+      "schema": "MoodCheckIn",
+      "description": "Almacena el historial de registros de tranquilidad y energía del usuario"
+    }
+  }
+}

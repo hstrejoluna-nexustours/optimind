@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, onAuthStateChanged } from 'firebase/auth';
 import { AbcdeEntry, MoodCheckIn } from './types';
 import { INITIAL_ENTRIES } from './data/initialData';
 import { Navbar, AppTab } from './components/Navbar';
@@ -8,7 +9,21 @@ import { GlossaryTab } from './components/GlossaryTab';
 import { AbcdeGymTab } from './components/AbcdeGymTab';
 import { ThoughtStopperModal } from './components/ThoughtStopperModal';
 import { JsonDataModal } from './components/JsonDataModal';
-import { Feather, Heart, BookOpen, Brain, Sparkles, Wind } from 'lucide-react';
+import { UserProfileModal } from './components/UserProfileModal';
+import { 
+  auth, 
+  loginWithGoogle, 
+  logoutUser, 
+  syncUserProfile, 
+  subscribeToUserEntries, 
+  saveUserEntryToCloud, 
+  subscribeToUserMoods, 
+  saveUserMoodToCloud, 
+  saveBookmarksToCloud, 
+  migrateLocalDataToCloud, 
+  UserProfileData 
+} from './services/firebase';
+import { Cloud, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
 
 const STORAGE_ENTRIES_KEY = 'optimind_entries_v2';
 const STORAGE_MOODS_KEY = 'optimind_moods_v2';
@@ -17,7 +32,13 @@ const STORAGE_BOOKMARKS_KEY = 'optimind_bookmarks_v2';
 export default function App() {
   const [currentTab, setCurrentTab] = useState<AppTab>('santuario');
 
-  // ABCDE Entries State
+  // Firebase Auth & Cloud Profile State
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // ABCDE Entries State (Initialized from localStorage fallback)
   const [entries, setEntries] = useState<AbcdeEntry[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -27,7 +48,7 @@ export default function App() {
           if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         }
       } catch (e) {
-        console.error('Error loading entries', e);
+        console.error('Error loading entries from localStorage', e);
       }
     }
     return INITIAL_ENTRIES;
@@ -43,7 +64,7 @@ export default function App() {
           if (Array.isArray(parsed)) return parsed;
         }
       } catch (e) {
-        console.error('Error loading moods', e);
+        console.error('Error loading moods from localStorage', e);
       }
     }
     return [
@@ -67,7 +88,7 @@ export default function App() {
           if (Array.isArray(parsed)) return parsed;
         }
       } catch (e) {
-        console.error('Error loading bookmarks', e);
+        console.error('Error loading bookmarks from localStorage', e);
       }
     }
     return ['modelo-abcde', 'descatastrofizacion', 'regla-optimismo-flexible'];
@@ -76,16 +97,25 @@ export default function App() {
   // Active workout entry being worked on
   const [activeGymEntry, setActiveGymEntry] = useState<Partial<AbcdeEntry> | undefined>(undefined);
 
-  // Modals
+  // Modals State
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
   const [isThoughtStopperOpen, setIsThoughtStopperOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Persistence Effects
+  // Toast Helper
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(prev => prev === msg ? null : prev);
+    }, 3500);
+  };
+
+  // Local storage backup effects
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_ENTRIES_KEY, JSON.stringify(entries));
     } catch (e) {
-      console.error('Failed to save entries', e);
+      console.error('Failed to save entries to localStorage', e);
     }
   }, [entries]);
 
@@ -93,7 +123,7 @@ export default function App() {
     try {
       localStorage.setItem(STORAGE_MOODS_KEY, JSON.stringify(moods));
     } catch (e) {
-      console.error('Failed to save moods', e);
+      console.error('Failed to save moods to localStorage', e);
     }
   }, [moods]);
 
@@ -101,22 +131,104 @@ export default function App() {
     try {
       localStorage.setItem(STORAGE_BOOKMARKS_KEY, JSON.stringify(bookmarks));
     } catch (e) {
-      console.error('Failed to save bookmarks', e);
+      console.error('Failed to save bookmarks to localStorage', e);
     }
   }, [bookmarks]);
 
-  // Handlers
-  const handleSaveMoodCheckIn = (newMood: MoodCheckIn) => {
+  // Firebase Auth Lifecycle & Real-time Firestore Subscriptions
+  useEffect(() => {
+    let unsubscribeEntries: (() => void) | undefined;
+    let unsubscribeMoods: (() => void) | undefined;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      setIsAuthLoading(false);
+
+      if (currentUser) {
+        // Compute streak & total workouts
+        const currentStreak = Math.max(3, entries.length + moods.length);
+        
+        try {
+          // Initialize or load Firestore profile
+          const profile = await syncUserProfile(currentUser, currentStreak, entries.length, bookmarks);
+          setUserProfile(profile);
+
+          if (profile.bookmarkedTerms && profile.bookmarkedTerms.length > 0) {
+            setBookmarks(profile.bookmarkedTerms);
+          }
+
+          // Subscribe to Cloud ABCDE Entries
+          unsubscribeEntries = subscribeToUserEntries(
+            currentUser.uid,
+            (cloudEntries) => {
+              if (cloudEntries && cloudEntries.length > 0) {
+                setEntries(cloudEntries);
+              } else if (entries.length > 0) {
+                // If cloud is empty but local has data, migrate them automatically
+                migrateLocalDataToCloud(currentUser.uid, entries, moods, bookmarks);
+              }
+            },
+            (err) => console.warn('Cloud entries subscription error:', err)
+          );
+
+          // Subscribe to Cloud Mood Check-Ins
+          unsubscribeMoods = subscribeToUserMoods(
+            currentUser.uid,
+            (cloudMoods) => {
+              if (cloudMoods && cloudMoods.length > 0) {
+                setMoods(cloudMoods);
+              }
+            },
+            (err) => console.warn('Cloud moods subscription error:', err)
+          );
+
+          showToast(`🌿 Sesión iniciada: Bienvenido(a) ${currentUser.displayName || ''}`);
+        } catch (error) {
+          console.error('Error synchronizing with Firestore:', error);
+        }
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeEntries) unsubscribeEntries();
+      if (unsubscribeMoods) unsubscribeMoods();
+    };
+  }, []);
+
+  // Handlers for ABCDE, Moods, Bookmarks
+  const handleSaveMoodCheckIn = async (newMood: MoodCheckIn) => {
     setMoods(prev => [newMood, ...prev]);
+
+    if (user) {
+      try {
+        await saveUserMoodToCloud(user.uid, newMood);
+        showToast('🌱 Estado anímico guardado en la nube');
+      } catch (e) {
+        console.error('Failed to save mood to cloud', e);
+      }
+    }
   };
 
-  const handleToggleBookmark = (termId: string) => {
-    setBookmarks(prev => 
-      prev.includes(termId) ? prev.filter(id => id !== termId) : [...prev, termId]
-    );
+  const handleToggleBookmark = async (termId: string) => {
+    const next = bookmarks.includes(termId) 
+      ? bookmarks.filter(id => id !== termId) 
+      : [...bookmarks, termId];
+    
+    setBookmarks(next);
+
+    if (user) {
+      try {
+        await saveBookmarksToCloud(user.uid, next);
+      } catch (e) {
+        console.error('Failed to sync bookmarks', e);
+      }
+    }
   };
 
-  const handleSaveAbcdeEntry = (newEntry: AbcdeEntry) => {
+  const handleSaveAbcdeEntry = async (newEntry: AbcdeEntry) => {
     setEntries(prev => {
       const idx = prev.findIndex(e => e.id === newEntry.id);
       if (idx >= 0) {
@@ -127,6 +239,18 @@ export default function App() {
       return [newEntry, ...prev];
     });
     setActiveGymEntry(undefined);
+
+    if (user) {
+      try {
+        await saveUserEntryToCloud(user.uid, newEntry);
+        // Also update profile streak and workout counter
+        const nextStreak = Math.max(3, entries.length + moods.length + 1);
+        await syncUserProfile(user, nextStreak, entries.length + 1, bookmarks);
+        showToast('🧠 Ejercicio ABCDE guardado y respaldado en Cloud Firestore');
+      } catch (e) {
+        console.error('Failed to save entry to cloud', e);
+      }
+    }
   };
 
   const handleSelectSavedEntry = (entry: AbcdeEntry) => {
@@ -134,10 +258,21 @@ export default function App() {
     setCurrentTab('gimnasio');
   };
 
-  const handleImportAllData = (data: { entries?: AbcdeEntry[]; moods?: MoodCheckIn[]; bookmarks?: string[] }) => {
+  const handleImportAllData = async (data: { entries?: AbcdeEntry[]; moods?: MoodCheckIn[]; bookmarks?: string[] }) => {
     if (data.entries && Array.isArray(data.entries)) setEntries(data.entries);
     if (data.moods && Array.isArray(data.moods)) setMoods(data.moods);
     if (data.bookmarks && Array.isArray(data.bookmarks)) setBookmarks(data.bookmarks);
+
+    if (user) {
+      showToast('Sincronizando respaldo importado a Firebase...');
+      await migrateLocalDataToCloud(
+        user.uid, 
+        data.entries || entries, 
+        data.moods || moods, 
+        data.bookmarks || bookmarks
+      );
+      showToast('✅ Respaldo completo sincronizado con la nube');
+    }
   };
 
   const handleResetToDefault = () => {
@@ -145,18 +280,61 @@ export default function App() {
     setBookmarks(['modelo-abcde', 'descatastrofizacion', 'regla-optimismo-flexible']);
   };
 
+  const handleLogin = async () => {
+    try {
+      const signedInUser = await loginWithGoogle();
+      setIsProfileModalOpen(false);
+      showToast(`🌿 Sincronizando datos de ${signedInUser.displayName || 'tu cuenta'}...`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      setUser(null);
+      setUserProfile(null);
+      setIsProfileModalOpen(false);
+      showToast('Sesión cerrada. Continuando en modo local.');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSyncLocalToCloud = async () => {
+    if (!user) return;
+    await migrateLocalDataToCloud(user.uid, entries, moods, bookmarks);
+    await syncUserProfile(user, Math.max(3, entries.length + moods.length), entries.length, bookmarks);
+    showToast('☁️ Todos tus datos locales han sido respaldados en Firestore');
+  };
+
   // Resilience streak calculation
-  const streak = Math.max(3, entries.length + moods.length);
+  const streak = userProfile?.streak 
+    ? Math.max(userProfile.streak, entries.length + moods.length) 
+    : Math.max(3, entries.length + moods.length);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#333E38] selection:bg-[#2E5A44]/15 selection:text-[#2E5A44] transition-colors">
+    <div className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#333E38] selection:bg-[#2E5A44]/15 selection:text-[#2E5A44] transition-colors relative">
       {/* Top Persistent Header & Navigation (4 Tabs) */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         streak={streak}
         onOpenDataModal={() => setIsDataModalOpen(true)}
+        user={user}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
       />
+
+      {/* Floating Calm Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+          <div className="bg-[#2E5A44] text-[#FBF9F5] px-4 py-3 rounded-2xl shadow-tonal-xl border border-[#244836] flex items-center gap-2.5 text-xs font-medium">
+            <Sparkles className="w-4 h-4 text-[#FBF9F5]/90 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Main Tab Content */}
       <main className="flex-1 pb-8">
@@ -198,6 +376,21 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* User Profile & Firebase Sync Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        userProfile={userProfile}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+        entries={entries}
+        moods={moods}
+        streak={streak}
+        onSyncLocalToCloud={handleSyncLocalToCloud}
+        onOpenDataModal={() => setIsDataModalOpen(true)}
+      />
 
       {/* Thought Stopper Modal */}
       <ThoughtStopperModal
@@ -268,8 +461,11 @@ export default function App() {
               Basado en las investigaciones de Martin Seligman (Universidad de Pensilvania). 
               Diseñado con principios de <em>Calm Technology</em>, Diseño Emocional (Don Norman) y accesibilidad WCAG AA. Cero positivismo tóxico.
             </p>
-            <div className="whitespace-nowrap font-medium text-[#2E5A44]">
-              Datos guardados de forma privada en tu dispositivo
+            <div className="flex items-center gap-2 font-medium text-[#2E5A44]">
+              <Cloud className="w-3.5 h-3.5" />
+              <span>
+                {user ? 'Sincronizado con Firebase Firestore' : 'Modo local seguro • Inicia sesión para sincronizar'}
+              </span>
             </div>
           </div>
         </div>
