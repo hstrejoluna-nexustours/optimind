@@ -1,5 +1,29 @@
 import { AbcdeEntry, QuizQuestion } from '../types';
 
+export const DAILY_REFLECTIONS = [
+  {
+    id: 'ref-1',
+    quote: 'El optimismo aprendido no es una fe ciega en que todo saldrá bien; es el coraje sobrio de examinar qué depende de ti y saber que los tropiezos son temporales.',
+    author: 'Dr. Martin Seligman',
+    concept: 'La Transitoriedad del Tropiezo',
+    prompt: '¿Qué dificultad que enfrentas hoy podrías calificar como un evento pasajero en vez de una condena permanente?'
+  },
+  {
+    id: 'ref-2',
+    quote: 'La habilidad para disputar tus propios pensamientos catastróficos es la mejor vacuna psicológica contra la indefensión aprendida.',
+    author: 'Dr. Martin Seligman',
+    concept: 'La Discusión Activa',
+    prompt: 'Si un buen amigo te contara la preocupación que tienes hoy, ¿qué pruebas objetivas le presentarías para devolverle la serenidad?'
+  },
+  {
+    id: 'ref-3',
+    quote: 'Cuando el costo del fracaso es bajo, desata todo el optimismo posible. Cuando el costo es alto, la prudencia realista es tu mayor aliada.',
+    author: 'Dr. Martin Seligman',
+    concept: 'La Regla del Optimismo Flexible',
+    prompt: '¿Cuál es el costo real si tu próximo intento no sale perfecto? ¿Es un peligro vital o simplemente una lección para ajustar el rumbo?'
+  }
+];
+
 export const INITIAL_ENTRIES: AbcdeEntry[] = [
   {
     id: 'entry-seligman-demo-1',
@@ -22,7 +46,7 @@ export const INITIAL_ENTRIES: AbcdeEntry[] = [
       evidence: 'No es verdad que "siempre" me bloquean: hace 3 meses aprobaron la migración de servidores y el mes pasado elogiaron la auditoría de seguridad. Además, el director financiero no atacó mi capacidad técnica; cuestionó específicamente el flujo de caja del Q3.',
       alternatives: '1) La empresa enfrenta recortes temporales por la subida de tipos de interés. 2) Mi propuesta era financieramente densa; debí presentar un desglose por fases en lugar de una inversión en bloque.',
       decatastrophizing: 'El peor escenario es esperar 90 días o reestructurar el proyecto en tres entregables más pequeños. El proyecto no fue cancelado, fue pospuesto. Nadie dudó de mi empleo ni de mi reputación general.',
-      utility: 'Pensar que "mi carrera está estancada" solo me paraliza y me hace parecer desanimado ante mi equipo. Aplico ¡BASTA! a la rumiación y programo una sesión de 30 minutos con finanzas el jueves para revisar los números.',
+      utility: 'Pensar que "mi carrera está estancada" solo me paraliza y me hace parecer desanimado. Elijo una pausa consciente para soltar la rumiación y programo una sesión de 30 minutos con finanzas el jueves para revisar los números con calma.',
     },
     energization: {
       newIntensity: 3,

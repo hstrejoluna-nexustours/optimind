@@ -1,18 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Clock, 
-  Maximize2, 
-  UserCheck, 
   Sparkles, 
   ArrowRight, 
-  ShieldAlert, 
-  CheckCircle2, 
-  HelpCircle,
-  TrendingDown,
-  Activity,
-  Layers
+  Clock, 
+  Maximize2, 
+  Heart, 
+  Wind,
+  Compass,
+  Smile,
+  BookOpen
 } from 'lucide-react';
 import { ExplanatoryProfile, AbcdeEntry } from '../types';
+import { sounds } from '../utils/audio';
 
 interface DashboardMetricsProps {
   profile: ExplanatoryProfile;
@@ -29,244 +28,248 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   onOpenQuiz,
   onSelectEntry,
 }) => {
-  // Calculate average emotional intensity drop (C vs E)
+  // Breath pacer state (Inhale, Hold, Exhale)
+  const [breathPhase, setBreathPhase] = useState<'Inhala serenidad' | 'Sostén con calma' | 'Exhala la tensión'>('Inhala serenidad');
+
+  useEffect(() => {
+    const cycle = () => {
+      setBreathPhase('Inhala serenidad');
+      setTimeout(() => {
+        setBreathPhase('Sostén con calma');
+        setTimeout(() => {
+          setBreathPhase('Exhala la tensión');
+        }, 4000);
+      }, 4000);
+    };
+
+    cycle();
+    const interval = setInterval(cycle, 12000);
+    return () => clearInterval(interval);
+  }, []);
+
   const avgDrop = entries.length > 0
     ? (entries.reduce((acc, e) => acc + (e.consequences.intensity - e.energization.newIntensity), 0) / entries.length).toFixed(1)
-    : '4.5';
-
-  const getDimensionStatus = (score: number) => {
-    if (score < 40) return { label: 'Estilo Optimista / Resiliente', color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/60', border: 'border-emerald-200 dark:border-emerald-800' };
-    if (score <= 65) return { label: 'Estilo Mixto / Flexible', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/60', border: 'border-amber-200 dark:border-amber-800' };
-    return { label: 'Pauta Pesimista Vulnerable', color: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-50 dark:bg-rose-950/60', border: 'border-rose-200 dark:border-rose-800' };
-  };
-
-  const permStatus = getDimensionStatus(profile.permanenceScore);
-  const pervStatus = getDimensionStatus(profile.pervasivenessScore);
-  const personStatus = getDimensionStatus(profile.personalizationScore);
+    : '4.2';
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-900 via-slate-900 to-indigo-950 text-white p-6 sm:p-10 shadow-xl border border-teal-800/40">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-12 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="space-y-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      {/* Serene Hero Sanctuary */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#EDE6D8]/80 via-[#F3EFE7] to-[#E5ECE4]/70 dark:from-[#1E2420] dark:via-[#191D1A] dark:to-[#1C211E] p-8 sm:p-12 border border-[#E4DDD0] dark:border-[#2C332D] shadow-sm">
+        {/* Soft Organic Ambient Light */}
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-96 h-96 bg-[#5F7A61]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-10 -mb-16 w-80 h-80 bg-[#E2B678]/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold uppercase tracking-wider mb-4 border border-teal-500/30">
-            <Sparkles className="w-3.5 h-3.5" />
-            Metodología Científica del Dr. Martin Seligman
+        <div className="relative z-10 max-w-2xl">
+          <div className="text-[13px] text-[#556D57] dark:text-[#A4BAA5] font-medium tracking-wide mb-3 flex items-center gap-2">
+            <span>Santuario de Claridad Mental</span>
+            <span aria-hidden="true">·</span>
+            <span>Psicología Positiva de Martin Seligman</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            Gimnasio de Optimismo Aprendido
+
+          <h1 className="font-serif text-3xl sm:text-5xl font-normal tracking-tight text-[#282D2A] dark:text-[#F0F3EF] leading-tight text-balance">
+            Encuentra calma y perspectiva ante lo imprevisto.
           </h1>
-          <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed">
-            El optimismo aprendido no es una actitud ingenua ni autoengaño complaciente; es una habilidad cognitiva 
-            para auditar y disputar las explicaciones destructivas automáticas que tu cerebro genera ante la adversidad.
+
+          <p className="mt-4 text-[#5A605C] dark:text-[#A7ADA9] text-base leading-relaxed">
+            El optimismo consciente no es forzarte a estar alegre; es la serenidad de mirar los hechos 
+            con compasión y no convertir un mal día en una sentencia perpetua.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <button
               onClick={onStartWorkout}
-              className="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 active:bg-teal-600 text-slate-950 font-bold text-sm transition-all shadow-lg shadow-teal-500/25 flex items-center gap-2"
+              className="px-6 py-3.5 rounded-2xl bg-[#4A644C] hover:bg-[#3D543F] active:bg-[#334635] text-[#FAF8F5] text-sm font-semibold tracking-wide transition shadow-sm flex items-center gap-2.5"
             >
-              <Activity className="w-4 h-4" />
-              <span>Iniciar Entrenamiento ABCDE</span>
+              <span>Comenzar Nueva Reflexión ABCDE</span>
               <ArrowRight className="w-4 h-4" />
             </button>
+
             <button
               onClick={onOpenQuiz}
-              className="px-4 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-white font-medium text-sm transition border border-slate-700 flex items-center gap-2"
+              className="px-5 py-3.5 rounded-2xl bg-white/70 hover:bg-white dark:bg-[#252B27]/80 dark:hover:bg-[#2D342F] text-[#414643] dark:text-[#D5DBD6] text-sm font-medium transition border border-[#DDD6C9] dark:border-[#333C35]"
             >
-              <HelpCircle className="w-4 h-4 text-teal-400" />
-              <span>Calibrar Perfil con Test ASQ</span>
+              Calibrar mi Estilo Explicativo
             </button>
           </div>
         </div>
 
-        {/* Quick summary stats in hero */}
-        <div className="mt-8 pt-6 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
-          <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-            <div className="text-xs text-slate-400 font-medium">Entrenamientos Realizados</div>
-            <div className="text-xl sm:text-2xl font-black text-teal-300 mt-1">{profile.totalWorkouts}</div>
-          </div>
-          <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-            <div className="text-xs text-slate-400 font-medium">Alivio Emocional Promedio</div>
-            <div className="text-xl sm:text-2xl font-black text-indigo-300 mt-1 flex items-center gap-1">
-              <TrendingDown className="w-5 h-5 text-emerald-400" />
-              <span>-{avgDrop} pts</span>
+        {/* Mindful Breathing Pacer Strip */}
+        <div className="mt-10 pt-7 border-t border-[#DFD8CB]/80 dark:border-[#2C332D] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="relative w-8 h-8 rounded-full bg-[#5F7A61]/20 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full bg-[#5F7A61] animate-breath" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-[#3B4D3D] dark:text-[#A8BEA7]">
+                Pausa de Respiración Consciente
+              </div>
+              <div className="text-xs text-[#696F6B] dark:text-[#9BA19C]">
+                {breathPhase}
+              </div>
             </div>
           </div>
-          <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-            <div className="text-xs text-slate-400 font-medium">Racha de Resiliencia</div>
-            <div className="text-xl sm:text-2xl font-black text-amber-300 mt-1">{profile.resilienceStreak} días</div>
-          </div>
-          <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-            <div className="text-xs text-slate-400 font-medium">Enfoque Primario</div>
-            <div className="text-sm font-bold text-slate-200 mt-2 truncate">Optimismo Flexible</div>
+
+          <div className="flex items-center gap-6 text-xs text-[#696F6B] dark:text-[#9BA19C]">
+            <div>
+              <span className="font-semibold text-[#282D2A] dark:text-[#F0F3EF] tabular-nums">{profile.totalWorkouts}</span> reflexiones guiadas
+            </div>
+            <span aria-hidden="true">·</span>
+            <div>
+              <span className="font-semibold text-[#4A644C] dark:text-[#A8BEA7] tabular-nums">-{avgDrop} pts</span> de alivio emocional medio
+            </div>
+            <span aria-hidden="true">·</span>
+            <div>
+              <span className="font-semibold text-[#282D2A] dark:text-[#F0F3EF] tabular-nums">{profile.resilienceStreak} días</span> de presencia
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Explanatory Style Breakdown Section */}
-      <div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-              Tu Pauta Explicativa (Explanatory Style)
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Evaluada a través de las 3 dimensiones de Martin Seligman ante contratiempos.
-            </p>
-          </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-            Calculado en tiempo real con tus registros
-          </span>
+      {/* Explanatory Style: 3 Serene Dimensions */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-serif text-2xl font-normal text-[#282D2A] dark:text-[#F0F3EF]">
+            Tu Pauta de Pensamiento en 3 Dimensiones
+          </h2>
+          <p className="text-xs sm:text-sm text-[#696F6B] dark:text-[#9BA19C] mt-1">
+            Observa con ternura cómo tu mente explica los momentos difíciles y aprende a devolverle flexibilidad.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* 1. Permanence */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-500/30 transition">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/80 flex items-center justify-center text-teal-600 dark:text-teal-400">
-                <Clock className="w-5 h-5" />
+          {/* Dimension 1: Permanence */}
+          <div className="bg-white/80 dark:bg-[#1D221F] rounded-3xl p-6 border border-[#E8E2D7] dark:border-[#2C332E] shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4 text-xs text-[#5F7A61] dark:text-[#A8BEA7]">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
+                  01. Permanencia
+                </span>
+                <span className="text-[#727874] dark:text-[#8E9590]">
+                  {profile.permanenceScore < 45 ? 'Causa Transitoria' : profile.permanenceScore <= 65 ? 'En Equilibrio' : 'Causa Permanente'}
+                </span>
               </div>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${permStatus.bg} ${permStatus.color} ${permStatus.border}`}>
-                {permStatus.label}
-              </span>
-            </div>
 
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              1. Permanencia (Permanence)
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              ¿La causa es permanente (&quot;siempre/nunca&quot;) o transitoria (&quot;esta vez/últimamente&quot;)?
-            </p>
+              <h3 className="font-serif text-lg text-[#282D2A] dark:text-[#F0F3EF]">
+                ¿Temporal o Perpetuo?
+              </h3>
+              <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1.5 leading-relaxed">
+                El desánimo te dice &ldquo;siempre será así&rdquo;. La serenidad reconoce que los contratiempos son olas que pasan (&ldquo;ocurrió esta vez&rdquo;).
+              </p>
 
-            {/* Visual Gauge Bar */}
-            <div className="mt-5 space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-emerald-600 dark:text-emerald-400">Temporal (0%)</span>
-                <span className="text-slate-700 dark:text-slate-300">{profile.permanenceScore}%</span>
-                <span className="text-rose-600 dark:text-rose-400">Permanente (100%)</span>
-              </div>
-              <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-                <div 
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    profile.permanenceScore > 60 
-                      ? 'bg-rose-500' 
-                      : profile.permanenceScore > 35 
-                      ? 'bg-amber-500' 
-                      : 'bg-emerald-500'
-                  }`}
-                  style={{ width: `${Math.max(8, profile.permanenceScore)}%` }}
-                />
+              {/* Serene Progress Bar */}
+              <div className="mt-5 space-y-1.5">
+                <div className="flex justify-between text-[11px] font-medium text-[#797F7A] dark:text-[#989E99]">
+                  <span>Paso transitorio</span>
+                  <span className="tabular-nums font-semibold">{profile.permanenceScore}%</span>
+                  <span>Sin fin</span>
+                </div>
+                <div className="w-full h-2 bg-[#EFEAE2] dark:bg-[#282F2A] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full transition-all duration-700 bg-[#5F7A61]"
+                    style={{ width: `${Math.max(8, profile.permanenceScore)}%` }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400">
-              <strong className="text-slate-800 dark:text-slate-200">Clave de Seligman:</strong> Las personas resilientes consideran que los eventos negativos tienen causas transitorias y superables.
+            <div className="mt-5 pt-3 border-t border-[#F2ECE2] dark:border-[#282E2A] text-[11px] text-[#696F6B] dark:text-[#9BA19C] leading-normal italic">
+              &ldquo;Esto también pasará. No hay tormenta que dure cien años.&rdquo;
             </div>
           </div>
 
-          {/* 2. Pervasiveness */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-500/30 transition">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                <Maximize2 className="w-5 h-5" />
+          {/* Dimension 2: Pervasiveness */}
+          <div className="bg-white/80 dark:bg-[#1D221F] rounded-3xl p-6 border border-[#E8E2D7] dark:border-[#2C332E] shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4 text-xs text-[#5F7A61] dark:text-[#A8BEA7]">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <Maximize2 className="w-4 h-4" />
+                  02. Amplitud
+                </span>
+                <span className="text-[#727874] dark:text-[#8E9590]">
+                  {profile.pervasivenessScore < 45 ? 'Espacio Específico' : profile.pervasivenessScore <= 65 ? 'En Equilibrio' : 'Contagio Universal'}
+                </span>
               </div>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${pervStatus.bg} ${pervStatus.color} ${pervStatus.border}`}>
-                {pervStatus.label}
-              </span>
-            </div>
 
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              2. Amplitud (Pervasiveness)
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              ¿La causa es universal (&quot;todo me sale mal&quot;) o específica (&quot;este proyecto falló&quot;)?
-            </p>
+              <h3 className="font-serif text-lg text-[#282D2A] dark:text-[#F0F3EF]">
+                ¿Específico o Universal?
+              </h3>
+              <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1.5 leading-relaxed">
+                No permitas que un tropiezo en una sola área contamine toda tu identidad, tus relaciones o tu paz cotidiana.
+              </p>
 
-            {/* Visual Gauge Bar */}
-            <div className="mt-5 space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-emerald-600 dark:text-emerald-400">Específico (0%)</span>
-                <span className="text-slate-700 dark:text-slate-300">{profile.pervasivenessScore}%</span>
-                <span className="text-rose-600 dark:text-rose-400">Universal (100%)</span>
-              </div>
-              <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-                <div 
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    profile.pervasivenessScore > 60 
-                      ? 'bg-rose-500' 
-                      : profile.pervasivenessScore > 35 
-                      ? 'bg-amber-500' 
-                      : 'bg-emerald-500'
-                  }`}
-                  style={{ width: `${Math.max(8, profile.pervasivenessScore)}%` }}
-                />
+              {/* Serene Progress Bar */}
+              <div className="mt-5 space-y-1.5">
+                <div className="flex justify-between text-[11px] font-medium text-[#797F7A] dark:text-[#989E99]">
+                  <span>Circunscrito</span>
+                  <span className="tabular-nums font-semibold">{profile.pervasivenessScore}%</span>
+                  <span>Toda la vida</span>
+                </div>
+                <div className="w-full h-2 bg-[#EFEAE2] dark:bg-[#282F2A] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full transition-all duration-700 bg-[#5F7A61]"
+                    style={{ width: `${Math.max(8, profile.pervasivenessScore)}%` }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400">
-              <strong className="text-slate-800 dark:text-slate-200">Clave de Seligman:</strong> Aislar el fallo a una sola área previene que el desánimo contamine tu familia, salud o trabajo.
+            <div className="mt-5 pt-3 border-t border-[#F2ECE2] dark:border-[#282E2A] text-[11px] text-[#696F6B] dark:text-[#9BA19C] leading-normal italic">
+              &ldquo;Un proyecto falló, pero tu vida y tu capacidad siguen intactas.&rdquo;
             </div>
           </div>
 
-          {/* 3. Personalization */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-500/30 transition">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/80 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                <UserCheck className="w-5 h-5" />
+          {/* Dimension 3: Personalization */}
+          <div className="bg-white/80 dark:bg-[#1D221F] rounded-3xl p-6 border border-[#E8E2D7] dark:border-[#2C332E] shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4 text-xs text-[#5F7A61] dark:text-[#A8BEA7]">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <Heart className="w-4 h-4" />
+                  03. Compasión Serena
+                </span>
+                <span className="text-[#727874] dark:text-[#8E9590]">
+                  {profile.personalizationScore < 45 ? 'Comprensión Múltiple' : profile.personalizationScore <= 65 ? 'En Equilibrio' : 'Autoinculpación'}
+                </span>
               </div>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${personStatus.bg} ${personStatus.color} ${personStatus.border}`}>
-                {personStatus.label}
-              </span>
-            </div>
 
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              3. Personalización (Personalization)
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              ¿Causa interna destructiva (&quot;soy un inútil&quot;) o factores contextuales interactuantes?
-            </p>
+              <h3 className="font-serif text-lg text-[#282D2A] dark:text-[#F0F3EF]">
+                ¿Factores o Inutilidad?
+              </h3>
+              <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1.5 leading-relaxed">
+                Asume tu parte constructiva con madurez, pero sin atacarte con dureza interna. Reconoce las condiciones del entorno.
+              </p>
 
-            {/* Visual Gauge Bar */}
-            <div className="mt-5 space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-emerald-600 dark:text-emerald-400">Contextual (0%)</span>
-                <span className="text-slate-700 dark:text-slate-300">{profile.personalizationScore}%</span>
-                <span className="text-rose-600 dark:text-rose-400">Autoinculpación (100%)</span>
-              </div>
-              <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-                <div 
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    profile.personalizationScore > 60 
-                      ? 'bg-rose-500' 
-                      : profile.personalizationScore > 35 
-                      ? 'bg-amber-500' 
-                      : 'bg-emerald-500'
-                  }`}
-                  style={{ width: `${Math.max(8, profile.personalizationScore)}%` }}
-                />
+              {/* Serene Progress Bar */}
+              <div className="mt-5 space-y-1.5">
+                <div className="flex justify-between text-[11px] font-medium text-[#797F7A] dark:text-[#989E99]">
+                  <span>Factores y contexto</span>
+                  <span className="tabular-nums font-semibold">{profile.personalizationScore}%</span>
+                  <span>Soy un fallo</span>
+                </div>
+                <div className="w-full h-2 bg-[#EFEAE2] dark:bg-[#282F2A] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full transition-all duration-700 bg-[#5F7A61]"
+                    style={{ width: `${Math.max(8, profile.personalizationScore)}%` }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400">
-              <strong className="text-slate-800 dark:text-slate-200">Clave de Seligman:</strong> No evadas la responsabilidad genuina, pero jamás conviertas un fallo técnico en una condena de tu dignidad como persona.
+            <div className="mt-5 pt-3 border-t border-[#F2ECE2] dark:border-[#282E2A] text-[11px] text-[#696F6B] dark:text-[#9BA19C] leading-normal italic">
+              &ldquo;Trátate a ti mismo con la misma amabilidad con que tratarías a un buen amigo.&rdquo;
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Recent Workouts / Quick Access */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-            Últimos Entrenamientos Registrados
+      {/* Recent Reflections with warm, gentle tactile design */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-serif text-2xl font-normal text-[#282D2A] dark:text-[#F0F3EF]">
+            Reflexiones Recientes en el Santuario
           </h2>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Haz clic en cualquiera para examinar la reestructuración completa
+          <span className="text-xs text-[#727874] dark:text-[#8E9590]">
+            Toca cualquiera para recordar la perspectiva alcanzada
           </span>
         </div>
 
@@ -275,40 +278,39 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             <div
               key={entry.id}
               onClick={() => onSelectEntry(entry)}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 hover:border-teal-500/50 hover:shadow-md cursor-pointer transition flex flex-col justify-between"
+              className="bg-white/80 dark:bg-[#1D221F] rounded-3xl p-6 border border-[#E8E2D7] dark:border-[#2C332E] hover:border-[#5F7A61]/50 cursor-pointer transition flex flex-col justify-between group shadow-xs hover:shadow-sm"
             >
               <div>
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  <span className="font-semibold uppercase tracking-wider text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    {entry.category}
-                  </span>
+                <div className="flex items-center justify-between text-xs text-[#727874] dark:text-[#8E9590] mb-2">
+                  <span className="capitalize">{entry.category.replace('_', ' ')}</span>
+                  <span aria-hidden="true">·</span>
                   <span>{new Date(entry.createdAt).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}</span>
                 </div>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
-                  {entry.title || entry.adversity.slice(0, 50)}
+
+                <h3 className="font-serif text-base text-[#282D2A] dark:text-[#F0F3EF] group-hover:text-[#4A644C] dark:group-hover:text-[#A8BEA7] transition-colors">
+                  {entry.title || entry.adversity.slice(0, 55)}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 italic">
+
+                <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-2 line-clamp-2 italic leading-relaxed">
                   &ldquo;{entry.belief}&rdquo;
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-rose-500 font-bold">C: {entry.consequences.intensity}/10</span>
-                  <ArrowRight className="w-3 h-3 text-slate-400" />
-                  <span className="text-emerald-500 font-bold">E: {entry.energization.newIntensity}/10</span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                    -{entry.consequences.intensity - entry.energization.newIntensity} pts
-                  </span>
+              <div className="mt-5 pt-3 border-t border-[#F2ECE2] dark:border-[#282E2A] flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-[#727874] dark:text-[#8E9590]">
+                  <span>Tensión: {entry.consequences.intensity}/10</span>
+                  <span>→</span>
+                  <span className="text-[#4A644C] dark:text-[#A8BEA7] font-semibold">Calma: {entry.energization.newIntensity}/10</span>
                 </div>
-                <span className="text-teal-600 dark:text-teal-400 font-semibold text-xs flex items-center gap-1">
-                  Ver detalle <ArrowRight className="w-3 h-3" />
+
+                <span className="text-xs font-medium text-[#4A644C] dark:text-[#A8BEA7] group-hover:underline flex items-center gap-1">
+                  Abrir reflexión <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 };

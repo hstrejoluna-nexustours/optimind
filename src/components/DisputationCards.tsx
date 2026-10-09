@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { 
-  Search, 
-  Shuffle, 
-  AlertTriangle, 
-  Target, 
   Sparkles, 
   Check, 
-  HelpCircle,
-  Lightbulb,
-  ShieldCheck,
-  ChevronRight,
-  ChevronLeft
+  ChevronRight, 
+  ChevronLeft,
+  Sun,
+  Compass,
+  Feather,
+  Wind
 } from 'lucide-react';
 import { RefutationalCards } from '../types';
+import { sounds } from '../utils/audio';
 
 interface DisputationCardsProps {
   belief: string;
@@ -34,51 +32,43 @@ export const DisputationCards: React.FC<DisputationCardsProps> = ({
   const cardConfig = [
     {
       id: 'evidence' as const,
-      icon: Search,
-      emoji: '🕵️‍♂️',
-      title: 'Carta 1: Evidencia Factual',
-      subtitle: 'El detective objetivo',
-      color: 'teal',
-      badgeClass: 'bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800',
-      question: '¿Qué hechos medibles y verificables demuestran que este pensamiento pesimista es una exageración o distorsión?',
-      explanation: 'En lugar de consolarte con frases huecas, actúa como un detective científico. Si tu mente dice "nunca hago nada bien", busca pruebas en tu historial que contradigan esa generalización.',
-      placeholder: 'Ejemplo: No es verdad que siempre falle; hace 2 semanas cerré la entrega a tiempo. Además, el informe fue aprobado en 4 de 5 puntos...',
+      icon: Sun,
+      number: '01',
+      title: 'Luz de la Evidencia',
+      subtitle: 'La mirada objetiva y fáctica',
+      question: '¿Qué pruebas y hechos reales demuestran que este pensamiento es una conclusión apresurada?',
+      explanation: 'No te juzgues ni te engañes. Pregúntate con serenidad: si un amigo de confianza viera esta situación, ¿qué hechos concretos le dirían que no todo está perdido?',
+      placeholder: 'Ejemplo: No es verdad que siempre falle; hace apenas dos semanas completé con éxito la entrega. El desacuerdo fue solo sobre un detalle técnico puntual...',
     },
     {
       id: 'alternatives' as const,
-      icon: Shuffle,
-      emoji: '🔀',
-      title: 'Carta 2: Alternativas Múltiples',
-      subtitle: 'Búsqueda de causas variables',
-      color: 'indigo',
-      badgeClass: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800',
-      question: '¿Cuáles son al menos 2 explicaciones alternativas que sean específicas, modificables y no destructivas?',
-      explanation: 'Casi ningún acontecimiento se debe a una sola causa interna permanente. Genera hipótesis que involucren factores circunstanciales, tiempo, recursos o cansancio que puedas alterar en el futuro.',
-      placeholder: 'Ejemplo: 1) Estaba exhausto por haber dormido 4 horas. 2) La indicación recibida fue ambigua, no fue falta de capacidad intelectual...',
+      icon: Compass,
+      number: '02',
+      title: 'Luz de las Alternativas',
+      subtitle: 'Otras explicaciones posibles',
+      question: '¿Qué otras causas temporales, circunstanciales o externas pudieron influir en lo que pasó?',
+      explanation: 'Casi ningún suceso proviene de una sola causa fija. Abre espacio a factores como el cansancio, la falta de tiempo, la complejidad imprevista o las circunstancias ajenas.',
+      placeholder: 'Ejemplo: 1) Estaba agotado tras varios días sin dormir bien. 2) Las indicaciones iniciales fueron difusas para todo el equipo...',
     },
     {
       id: 'decatastrophizing' as const,
-      icon: AlertTriangle,
-      emoji: '🔍',
-      title: 'Carta 3: Descatastrofización',
-      subtitle: 'Evaluación del impacto real',
-      color: 'amber',
-      badgeClass: 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800',
-      question: 'Aún si la creencia fuera parcialmente cierta, ¿cuál es el peor desenlace realista? ¿Es realmente el fin del mundo?',
-      explanation: 'Tu cerebro primitivo suele tratar un contratiempo social o laboral como una amenaza de muerte biológica. Calcula la probabilidad real del peor escenario y cómo lo manejarías.',
-      placeholder: 'Ejemplo: En el peor caso tendré que rehacer la entrega el lunes y pedir disculpas. Es incómodo y frustrante, pero no pone en riesgo mi empleo ni mi vida...',
+      icon: Feather,
+      number: '03',
+      title: 'Luz de la Perspectiva',
+      subtitle: 'Descatastrofización serena',
+      question: 'Aun si hubiese algo de verdad, ¿cuál es el peor desenlace realista? ¿Es realmente el fin del mundo?',
+      explanation: 'Tu mente suele confundir la incomodidad con una tragedia irreparable. Respira hondo y evalúa el costo real: en la mayoría de los casos, es manejable paso a paso.',
+      placeholder: 'Ejemplo: En el peor de los casos tendré que pedir una prórroga de dos días y corregir los puntos observados. Es incómodo, pero no destruye mi vida ni mi empleo...',
     },
     {
       id: 'utility' as const,
-      icon: Target,
-      emoji: '🎯',
-      title: 'Carta 4: Utilidad y Freno Mental',
-      subtitle: 'Cuestionamiento pragmático',
-      color: 'rose',
-      badgeClass: 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800',
-      question: '¿Pensar en esto en este momento te ayuda a resolver algo o solo te paraliza? ¿Es momento de usar un "¡Basta!" mental?',
-      explanation: 'A veces una creencia puede tener algo de verdad, pero rumiarla de forma compulsiva solo drena tus recursos ejecutivos. Si no puedes actuar ahora mismo, interrumpe el pensamiento o difiérelo.',
-      placeholder: 'Ejemplo: Seguir dándole vueltas ahora a las 11 pm solo me quitará el sueño. Elijo aplicar ¡BASTA! y asignar 15 minutos mañana para tomar acción...',
+      icon: Wind,
+      number: '04',
+      title: 'Luz de la Utilidad & Dejar Ir',
+      subtitle: 'Liberación de la rumiación',
+      question: '¿Seguir dándole vueltas a este pensamiento ahora mismo te ayuda o solo drena tu paz interior?',
+      explanation: 'Pensar compulsivamente en un problema no lo resuelve. Si en este momento no puedes actuar, regálate una pausa, di &ldquo;dejo ir este pensamiento por hoy&rdquo; o aplázalo para mañana.',
+      placeholder: 'Ejemplo: Rumiar esto en la cama a las 11 pm solo me quitará el sueño reparador. Decido respirar tres veces, soltarlo y revisar los números mañana a las 10 am...',
     },
   ];
 
@@ -86,6 +76,7 @@ export const DisputationCards: React.FC<DisputationCardsProps> = ({
   const completedCount = Object.values(refutations).filter(text => text.trim().length > 10).length;
 
   const handleNext = () => {
+    sounds.playBambooChime();
     const idx = cardConfig.findIndex(c => c.id === activeCard);
     if (idx < cardConfig.length - 1) {
       setActiveCard(cardConfig[idx + 1].id);
@@ -101,102 +92,96 @@ export const DisputationCards: React.FC<DisputationCardsProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header & Progress Indicator */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Las 4 Cartas de Discusión (Herramientas D)
-            </span>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300">
-              {completedCount} / 4 completadas
-            </span>
+      {/* Header bar */}
+      <div className="bg-white/80 dark:bg-[#1C211E] p-6 rounded-3xl border border-[#E8E2D7] dark:border-[#2C332E] shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs text-[#5F7A61] dark:text-[#A8BEA7]">
+              <span>Paso D · Cuatro Luces de Perspectiva</span>
+              <span aria-hidden="true">·</span>
+              <span>{completedCount} de 4 completadas</span>
+            </div>
+            <h2 className="font-serif text-xl sm:text-2xl text-[#282D2A] dark:text-[#F0F3EF] mt-1">
+              Desarma la rigidez con sabiduría serena
+            </h2>
+            <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1 italic">
+              Examinando la creencia: &ldquo;{belief}&rdquo;
+            </p>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Desafía de manera rigurosa tu creencia automática: <span className="italic font-medium text-slate-700 dark:text-slate-300">&ldquo;{belief}&rdquo;</span>
-          </p>
-        </div>
 
-        {/* Tab switch pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {cardConfig.map((card) => {
-            const hasText = refutations[card.id].trim().length > 10;
-            const isSelected = activeCard === card.id;
+          {/* Clean Segmented Tab Buttons */}
+          <div className="flex items-center gap-1.5 p-1 bg-[#F1EDE5] dark:bg-[#252B27] rounded-2xl overflow-x-auto">
+            {cardConfig.map((card) => {
+              const isSelected = activeCard === card.id;
+              const hasText = refutations[card.id].trim().length > 10;
 
-            return (
-              <button
-                key={card.id}
-                onClick={() => setActiveCard(card.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap border ${
-                  isSelected
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }`}
-              >
-                <span>{card.emoji}</span>
-                <span className="hidden sm:inline">{card.title.split(':')[1]}</span>
-                {hasText && (
-                  <Check className="w-3 h-3 text-emerald-500 stroke-[3]" />
-                )}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => setActiveCard(card.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-white dark:bg-[#181D1A] text-[#282D2A] dark:text-[#F0F3EF] shadow-xs font-semibold'
+                      : 'text-[#696F6B] dark:text-[#9BA19C] hover:text-[#282D2A] dark:hover:text-[#F0F3EF]'
+                  }`}
+                >
+                  <span>{card.number}</span>
+                  <span className="hidden sm:inline">{card.title.replace('Luz de ', '')}</span>
+                  {hasText && <Check className="w-3 h-3 text-[#5F7A61]" />}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Main Active Card Canvas */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-md relative overflow-hidden transition-all">
-        {/* Top Card Identity */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{current.emoji}</span>
+      {/* Active Light Card Canvas */}
+      <div className="bg-white/90 dark:bg-[#1D221F] rounded-[2rem] p-6 sm:p-9 border border-[#E8E2D7] dark:border-[#2C332E] shadow-sm relative overflow-hidden transition-all">
+        {/* Subtle Warm Aura */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#E2B678]/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Card Header */}
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#F0EAE0] dark:border-[#282E2A]">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-[#5F7A61]/15 dark:bg-[#5F7A61]/25 flex items-center justify-center text-[#4A644C] dark:text-[#A8BEA7]">
+              <current.icon className="w-5 h-5" />
+            </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
-                  {current.title}
-                </h3>
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${current.badgeClass}`}>
-                  {current.subtitle}
-                </span>
+              <div className="text-xs text-[#5F7A61] dark:text-[#A8BEA7] font-medium">
+                {current.number} · {current.subtitle}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Regla de Seligman: Exactitud y evidencia sobre el consuelo irracional.
-              </p>
+              <h3 className="font-serif text-xl text-[#282D2A] dark:text-[#F0F3EF]">
+                {current.title}
+              </h3>
             </div>
           </div>
 
-          {/* AI Helper trigger button */}
           {onAskAiPrompt && (
             <button
               onClick={() => onAskAiPrompt(current.id)}
               disabled={isLoadingAi}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500/10 to-indigo-500/10 hover:from-teal-500/20 hover:to-indigo-500/20 border border-teal-500/30 text-teal-800 dark:text-teal-300 text-xs font-bold transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#F4EFE6] hover:bg-[#EAE4D9] dark:bg-[#252B27] dark:hover:bg-[#2C332E] text-[#424844] dark:text-[#D5DBD6] text-xs font-medium transition disabled:opacity-50"
             >
-              <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-              <span>{isLoadingAi ? 'Consultando...' : 'Pedir Pista a OptiMind'}</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#5F7A61]" />
+              <span>{isLoadingAi ? 'Consultando...' : 'Inspiración de OptiMind'}</span>
             </button>
           )}
         </div>
 
-        {/* Challenge prompt box */}
-        <div className="mt-5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80">
-          <div className="flex items-start gap-2.5">
-            <HelpCircle className="w-5 h-5 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {current.question}
-              </p>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                {current.explanation}
-              </p>
-            </div>
-          </div>
+        {/* Reflection Guide Box */}
+        <div className="relative z-10 mt-6 p-5 rounded-2xl bg-[#FAF7F2] dark:bg-[#232925] border border-[#EFE9DF] dark:border-[#2D352F] space-y-1.5">
+          <p className="font-serif text-base text-[#282D2A] dark:text-[#F0F3EF] leading-snug">
+            {current.question}
+          </p>
+          <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] leading-relaxed">
+            {current.explanation}
+          </p>
         </div>
 
-        {/* Input Textarea */}
-        <div className="mt-5 space-y-2">
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-            Tu Discusión Activa:
+        {/* Text Input */}
+        <div className="relative z-10 mt-6 space-y-2">
+          <label className="block text-xs font-medium text-[#4D524F] dark:text-[#B6BCB7]">
+            Tu perspectiva reflexiva:
           </label>
           <textarea
             value={refutations[current.id]}
@@ -206,41 +191,29 @@ export const DisputationCards: React.FC<DisputationCardsProps> = ({
             })}
             rows={5}
             placeholder={current.placeholder}
-            className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition leading-relaxed"
+            className="w-full px-4 py-3.5 rounded-2xl bg-[#FCFAF7] dark:bg-[#161A17] border border-[#E2DBD0] dark:border-[#2F3631] text-[#282D2A] dark:text-[#F0F3EF] text-sm focus:outline-none focus:ring-2 focus:ring-[#5F7A61]/40 leading-relaxed transition-all placeholder:text-[#9DA39E]"
           />
-          <div className="flex justify-between items-center text-[11px] text-slate-400">
-            <span>
-              {refutations[current.id].trim().length > 15 ? (
-                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Refutación registrada
-                </span>
-              ) : (
-                'Escribe al menos una frase con argumentos reales'
-              )}
-            </span>
-            <span>{refutations[current.id].length} caracteres</span>
-          </div>
         </div>
 
-        {/* Navigation buttons between cards */}
-        <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        {/* Bottom card navigation */}
+        <div className="relative z-10 mt-6 pt-5 border-t border-[#F0EAE0] dark:border-[#282E2A] flex items-center justify-between">
           <button
             type="button"
             onClick={handlePrev}
             disabled={activeCard === 'evidence'}
-            className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1"
+            className="px-4 py-2 rounded-xl text-xs font-medium text-[#696F6B] dark:text-[#9BA19C] hover:bg-[#F2EDE5] dark:hover:bg-[#252B27] transition disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Carta Anterior</span>
+            <span>Luz anterior</span>
           </button>
 
           <button
             type="button"
             onClick={handleNext}
             disabled={activeCard === 'utility'}
-            className="px-4 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition shadow-xs disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1"
+            className="px-5 py-2.5 rounded-xl bg-[#4A644C] hover:bg-[#3D543F] text-[#FAF8F5] text-xs font-semibold tracking-wide transition shadow-xs disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1.5"
           >
-            <span>Siguiente Carta</span>
+            <span>Siguiente Luz</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>

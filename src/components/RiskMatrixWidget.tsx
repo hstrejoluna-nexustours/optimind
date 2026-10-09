@@ -2,351 +2,240 @@ import React, { useState } from 'react';
 import { 
   Compass, 
   ShieldCheck, 
-  AlertOctagon, 
-  CheckCircle2, 
+  AlertCircle, 
   ArrowRight, 
   Sparkles,
-  DollarSign,
-  HeartHandshake,
-  Activity,
-  Briefcase,
-  Scale
+  Scale,
+  Feather
 } from 'lucide-react';
 
 interface RiskMatrixWidgetProps {
   onApplyScenarioToWizard?: (adversityPreset: string, beliefPreset: string, costOfFailure: 'low' | 'high' | 'moderate') => void;
 }
 
-interface ScenarioTemplate {
-  title: string;
-  category: string;
-  icon: any;
-  costLevel: 'low' | 'high' | 'moderate';
-  costDescription: string;
-  recommendation: 'flexible_optimism' | 'prudent_realism';
-  adversityExample: string;
-  beliefExample: string;
-  rationale: string;
-  actionItems: string[];
-}
-
 export const RiskMatrixWidget: React.FC<RiskMatrixWidgetProps> = ({
   onApplyScenarioToWizard,
 }) => {
   const [selectedCost, setSelectedCost] = useState<'low' | 'high' | 'moderate'>('low');
-  const [customSituation, setCustomSituation] = useState('');
-  const [customCostAssessment, setCustomCostAssessment] = useState<'low' | 'high' | 'moderate'>('low');
 
-  const presetScenarios: ScenarioTemplate[] = [
+  const presetScenarios = [
     {
-      title: 'Hacer una llamada fría o pedir un aumento',
-      category: 'Profesional / Social',
-      icon: Briefcase,
-      costLevel: 'low',
-      costDescription: 'El peor desenlace es escuchar un "no" temporal o un rechazo incómodo de 5 minutos.',
-      recommendation: 'flexible_optimism',
+      title: 'Hacer una llamada incómoda o pedir una oportunidad',
+      category: 'Social & Aprendizaje',
+      costLevel: 'low' as const,
+      costDescription: 'El peor desenlace es una negativa educada o un momento de incomodidad pasajera.',
+      recommendation: 'Optimismo Flexible',
       adversityExample: 'El cliente no aceptó la propuesta en la primera llamada.',
-      beliefExample: 'No tengo talento para vender, solo hago perder el tiempo.',
-      rationale: 'El costo del rechazo es puramente emocional y transitorio. El beneficio potencial de intentarlo es alto y el aprendizaje acelera tu crecimiento.',
-      actionItems: [
-        'Aplica Optimismo Aprendido sin titubeos.',
-        'Atribuye el "no" a causas temporales y específicas (momento inoportuno, falta de presupuesto actual).',
-        'Haz 3 intentos adicionales hoy mismo para normalizar la exposición.',
-      ]
+      beliefExample: 'No tengo talento para esto, solo hago perder el tiempo.',
+      rationale: 'El costo del rechazo es transitorio. El beneficio de intentarlo es alto y la experiencia te da soltura.',
     },
     {
-      title: 'Inversión de los ahorros de toda la vida en un negocio no probado',
-      category: 'Financiero / Patrimonial',
-      icon: DollarSign,
-      costLevel: 'high',
-      costDescription: 'El peor desenlace es la quiebra personal o la pérdida irreversible de tu estabilidad económica.',
-      recommendation: 'prudent_realism',
-      adversityExample: 'Los números de proyección del negocio muestran un déficit del 40% en los primeros meses.',
-      beliefExample: 'No pasa nada, con buena actitud y pasión todo saldrá bien.',
-      rationale: 'Seligman advierte: si el costo del fracaso es catastrófico o irreversible, NO utilices optimismo ciego. Emplea Pesimismo Prudente para auditar riesgos rigurosamente.',
-      actionItems: [
-        'Aplica Pesimismo Prudente / Realista.',
-        'Contrata una auditoría externa imparcial de riesgos.',
-        'Establece un límite de pérdida estricto (stop-loss) antes de comprometer fondos.',
-        'No actúes por mero entusiasmo irracional.',
-      ]
+      title: 'Comprometer todos los ahorros familiares en una aventura no probada',
+      category: 'Patrimonio & Seguridad',
+      costLevel: 'high' as const,
+      costDescription: 'El peor desenlace es comprometer la estabilidad básica del hogar.',
+      recommendation: 'Pesimismo Prudente',
+      adversityExample: 'Las proyecciones del proyecto muestran un déficit severo a corto plazo.',
+      beliefExample: 'Seguro saldrá bien solo con entusiasmo y fe.',
+      rationale: 'Seligman enfatiza: cuando el costo del fracaso es irreversible, la duda metódica y el realismo cauto son los mejores protectores.',
     },
     {
-      title: 'Comenzar a aprender un nuevo instrumento o deporte',
-      category: 'Desarrollo Personal',
-      icon: Activity,
-      costLevel: 'low',
-      costDescription: 'El costo de sonar desafinado o cometer errores técnicos es cero en términos de integridad física.',
-      recommendation: 'flexible_optimism',
-      adversityExample: 'No logré coordinar el ritmo en las primeras 3 clases.',
-      beliefExample: 'Soy torpe por naturaleza, nunca tocaré bien.',
-      rationale: 'Cero riesgo existencial. Rendirse aquí por atribución pesimista es la clásica trampa de indefensión aprendida.',
-      actionItems: [
-        'Aplica Optimismo Flexible.',
-        'Acepta el fallo inicial como parte natural de la mielinización neuronal.',
-        'Practica micro-sesiones de 10 minutos enfocadas en una sola nota.',
-      ]
+      title: 'Empezar a practicar una disciplina física o un nuevo hábito',
+      category: 'Crecimiento Personal',
+      costLevel: 'low' as const,
+      costDescription: 'El costo de tener días lentos o fallar una sesión es nulo para tu integridad.',
+      recommendation: 'Optimismo Flexible',
+      adversityExample: 'Solo alcancé a entrenar 1 día de los 3 que había planeado.',
+      beliefExample: 'No tengo fuerza de voluntad para esto.',
+      rationale: 'No hay peligro alguno. Tratar el tropiezo con benevolencia te ayuda a retomar la rutina sin culpa.',
     },
     {
-      title: 'Decisión médica delicada o cirugía invasiva opcional',
-      category: 'Salud / Biológico',
-      icon: Scale,
-      costLevel: 'high',
-      costDescription: 'El costo de una complicación puede comprometer la salud permanentemente.',
-      recommendation: 'prudent_realism',
-      adversityExample: 'El diagnóstico presenta dudas sobre secuelas a largo plazo.',
-      beliefExample: 'Seguro todo saldrá perfecto sin pedir una segunda opinión.',
-      rationale: 'Pesimismo Prudente: la duda metódica salva vidas. Exige segundas opiniones y revisa los peores escenarios antes de firmar consentimientos.',
-      actionItems: [
-        'Aplica Pesimismo Prudente / Realista.',
-        'Solicita segundas opiniones médicas especializadas.',
-        'Pregunta por tasas de complicación y planes de contingencia hospitalarios.',
-      ]
+      title: 'Decisión médica importante o procedimiento delicado',
+      category: 'Salud & Vida',
+      costLevel: 'high' as const,
+      costDescription: 'Las consecuencias de actuar a ciegas pueden afectar el bienestar corporal permanente.',
+      recommendation: 'Pesimismo Prudente',
+      adversityExample: 'El diagnóstico plantea dudas sobre secuelas a largo plazo.',
+      beliefExample: 'No pasa nada, seguro no habrá complicaciones.',
+      rationale: 'El realismo prudente salva vidas: solicita segundas opiniones y revisa los protocolos con frialdad analítica.',
     }
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Title Header */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-md">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950 flex items-center justify-center text-teal-600 dark:text-teal-400">
-            <Compass className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100">
-              Regla del Optimismo Flexible de Seligman
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              ¿Cuándo usar Optimismo Aprendido y cuándo recurrir al Pesimismo Prudente?
-            </p>
-          </div>
+    <div className="space-y-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      {/* Header */}
+      <div className="bg-white/80 dark:bg-[#1A1F1C] rounded-[2rem] p-8 sm:p-10 border border-[#E8E2D7] dark:border-[#2C332E] shadow-xs">
+        <div className="flex items-center gap-3 text-xs text-[#5F7A61] dark:text-[#A8BEA7] font-medium mb-2">
+          <span>Discernimiento Inteligente</span>
+          <span aria-hidden="true">·</span>
+          <span>Regla de Oro de Martin Seligman</span>
         </div>
 
-        {/* Seligman Core Principle Box */}
-        <div className="mt-4 p-4 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs sm:text-sm text-teal-900 dark:text-teal-200 leading-relaxed flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
-          <div>
-            <strong className="font-bold">El axioma fundamental de Martin Seligman:</strong>
-            <p className="mt-0.5">
-              &ldquo;La guía para utilizar el optimismo aprendido es preguntarse: <em>¿Cuál es el costo del fracaso?</em> Si el costo es muy alto, no use optimismo. Pero si el costo del fracaso es bajo, use todo el optimismo posible.&rdquo;
-            </p>
-          </div>
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#282D2A] dark:text-[#F0F3EF]">
+          La Brújula del Costo del Fracaso
+        </h1>
+        <p className="text-xs sm:text-sm text-[#696F6B] dark:text-[#9BA19C] mt-2 max-w-2xl leading-relaxed">
+          El optimismo no debe aplicarse a ciegas. La sabiduría radica en calibrar el impacto real: 
+          si el costo del fracaso es leve, atrévete con optimismo; si el costo es grave, acude al pesimismo prudente.
+        </p>
+
+        {/* Core quote box */}
+        <div className="mt-6 p-5 rounded-2xl bg-[#F7F3EB] dark:bg-[#222724] border border-[#EBE4D7] dark:border-[#2D332F] text-xs text-[#5A635C] dark:text-[#BAC0BB] leading-relaxed italic">
+          &ldquo;La guía para utilizar el optimismo aprendido es preguntarse: ¿Cuál es el costo del fracaso? 
+          Si el costo es muy alto, no use optimismo. Pero si el costo del fracaso es bajo, use todo el optimismo posible.&rdquo;
         </div>
       </div>
 
-      {/* Interactive Decision Tree Matrix Calculator */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-md">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-          Calculadora Rápida: Evalúa tu Situación
-        </h2>
+      {/* Decision Tree Interactive Tabs */}
+      <div className="bg-white/90 dark:bg-[#1A1F1C] rounded-[2rem] p-8 border border-[#E8E2D7] dark:border-[#2C332E] shadow-xs space-y-6">
+        <div>
+          <h2 className="font-serif text-xl text-[#282D2A] dark:text-[#F0F3EF]">
+            Evalúa el costo real para tu situación actual:
+          </h2>
+          <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-0.5">
+            Selecciona la opción que mejor describa la naturaleza de tu reto.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Option 1: Low Cost */}
           <button
             onClick={() => setSelectedCost('low')}
-            className={`p-5 rounded-2xl text-left border transition-all ${
+            className={`p-5 rounded-2xl text-left transition-all border ${
               selectedCost === 'low'
-                ? 'bg-teal-50 dark:bg-teal-950/70 border-teal-500 ring-2 ring-teal-500/30'
-                : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                ? 'bg-[#EFF4EE] dark:bg-[#1C251E] border-[#5F7A61] shadow-2xs'
+                : 'bg-[#FAF7F2] dark:bg-[#202522] border-[#EDE7DD] dark:border-[#2A312B] hover:border-[#D5CCC0]'
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-                Costo Bajo
-              </span>
-              <ShieldCheck className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+            <div className="text-xs text-[#4A644C] dark:text-[#A8BEA7] font-semibold mb-1">
+              Costo Bajo
             </div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-              Riesgo Social, Emocional o de Práctica
+            <h3 className="font-serif text-base text-[#282D2A] dark:text-[#F0F3EF]">
+              Riesgo Social o Emocional
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Ejemplos: iniciar una conversación, enviar un CV, entrenar, proponer una idea en junta.
+            <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1.5 leading-relaxed">
+              Intentos, llamadas, nuevas ideas, aprender algo nuevo o pedir ayuda.
             </p>
           </button>
 
-          {/* Option 2: Moderate Cost */}
           <button
             onClick={() => setSelectedCost('moderate')}
-            className={`p-5 rounded-2xl text-left border transition-all ${
+            className={`p-5 rounded-2xl text-left transition-all border ${
               selectedCost === 'moderate'
-                ? 'bg-amber-50 dark:bg-amber-950/70 border-amber-500 ring-2 ring-amber-500/30'
-                : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                ? 'bg-[#F9F5EC] dark:bg-[#26241D] border-[#C98A42] shadow-2xs'
+                : 'bg-[#FAF7F2] dark:bg-[#202522] border-[#EDE7DD] dark:border-[#2A312B] hover:border-[#D5CCC0]'
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                Costo Moderado
-              </span>
-              <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <div className="text-xs text-[#C98A42] font-semibold mb-1">
+              Costo Moderado
             </div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-              Compromiso de Recursos con Red de Seguridad
+            <h3 className="font-serif text-base text-[#282D2A] dark:text-[#F0F3EF]">
+              Decisiones con Red de Seguridad
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Ejemplos: cambiar de proyecto interno, mudanza local, lanzar una versión beta controlada.
+            <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1.5 leading-relaxed">
+              Cambios de proyecto, compras medianas o acuerdos reversibles.
             </p>
           </button>
 
-          {/* Option 3: High Cost */}
           <button
             onClick={() => setSelectedCost('high')}
-            className={`p-5 rounded-2xl text-left border transition-all ${
+            className={`p-5 rounded-2xl text-left transition-all border ${
               selectedCost === 'high'
-                ? 'bg-rose-50 dark:bg-rose-950/70 border-rose-500 ring-2 ring-rose-500/30'
-                : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                ? 'bg-[#F9EEEE] dark:bg-[#281E1E] border-[#C46A6A] shadow-2xs'
+                : 'bg-[#FAF7F2] dark:bg-[#202522] border-[#EDE7DD] dark:border-[#2A312B] hover:border-[#D5CCC0]'
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
-                Costo Alto
-              </span>
-              <AlertOctagon className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+            <div className="text-xs text-[#C46A6A] font-semibold mb-1">
+              Costo Alto
             </div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-              Riesgo Físico, Legal o Financiero Grave
+            <h3 className="font-serif text-base text-[#282D2A] dark:text-[#F0F3EF]">
+              Riesgo Vital o Patrimonial
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Ejemplos: apostar patrimonio, deportes extremos sin equipo, ignorar síntomas graves.
+            <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1.5 leading-relaxed">
+              Inversiones de vida, salud crítica, seguridad física o temas legales.
             </p>
           </button>
         </div>
 
-        {/* Selected Result Box */}
-        <div className="mt-6 p-6 rounded-2xl border transition-all bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <div>
-              <span className="text-xs uppercase font-extrabold tracking-wider text-slate-400">
-                Veredicto Metodológico
-              </span>
-              <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 mt-0.5 flex items-center gap-2">
-                {selectedCost === 'low' && (
-                  <>
-                    <span className="text-emerald-600 dark:text-emerald-400">✨ Optimismo Flexible y Audaz</span>
-                  </>
-                )}
-                {selectedCost === 'moderate' && (
-                  <>
-                    <span className="text-amber-600 dark:text-amber-400">⚖️ Enfoque Híbrido: Optimismo con Contingencia</span>
-                  </>
-                )}
-                {selectedCost === 'high' && (
-                  <>
-                    <span className="text-rose-600 dark:text-rose-400">🛡️ Pesimismo Prudente / Realista Estricto</span>
-                  </>
-                )}
-              </h3>
-            </div>
-
-            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-              selectedCost === 'low'
-                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300'
-                : selectedCost === 'moderate'
-                ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300'
-                : 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border-rose-300'
-            }`}>
-              {selectedCost === 'low' ? 'Priorizar Acción' : selectedCost === 'moderate' ? 'Acción Calibrada' : 'Priorizar Auditoría'}
+        {/* Verdict Box */}
+        <div className="p-6 rounded-3xl bg-[#FAF7F2] dark:bg-[#222724] border border-[#EFE9DF] dark:border-[#2C332E] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="text-xs text-[#5F7A61] dark:text-[#A8BEA7] font-medium">
+              Veredicto de Sabiduría
+            </span>
+            <span className="text-xs font-semibold text-[#282D2A] dark:text-[#F0F3EF]">
+              {selectedCost === 'low' ? 'Adelante con serenidad' : selectedCost === 'moderate' ? 'Avanzar con precaución' : 'Pausar y auditar riesgos'}
             </span>
           </div>
 
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          <h3 className="font-serif text-xl text-[#282D2A] dark:text-[#F0F3EF]">
+            {selectedCost === 'low' && '✨ Aplica Optimismo Flexible y Acción Serene'}
+            {selectedCost === 'moderate' && '⚖️ Enfoque Híbrido: Optimismo con Salvaguarda'}
+            {selectedCost === 'high' && '🛡️ Aplica Pesimismo Prudente & Realista'}
+          </h3>
+
+          <p className="text-xs sm:text-sm text-[#696F6B] dark:text-[#9BA19C] leading-relaxed">
             {selectedCost === 'low' && (
-              "El costo de fallar es minúsculo en comparación con el costo del arrepentimiento por no intentarlo. Si sufres un rechazo o tropiezo, disputa de inmediato cualquier creencia automática de ineptitud permanente. ¡Actúa hoy!"
+              'El costo de equivocarte es infinitamente menor que el peso del arrepentimiento por no haberlo intentado. Si surge un contratiempo, desafía cualquier voz que te diga que es permanente.'
             )}
             {selectedCost === 'moderate' && (
-              "Prepara un plan de escape o salvaguarda mínima. Una vez cubierto ese piso de seguridad, aplica optimismo para ejecutar con determinación sin paralizarte por perfeccionismo."
+              'Asegura un plan B sencillo. Una vez que tengas un piso de tranquilidad, ejecuta tu proyecto sin dejarte atrapar por la indecisión perfeccionista.'
             )}
             {selectedCost === 'high' && (
-              "El Dr. Seligman enfatiza que en momentos de alto riesgo, los pesimistas ven la realidad con mayor exactitud métrica. Escucha las señales de peligro, elabora un análisis pre-mortem y asegura seguros antes de dar un solo paso."
+              'Aquí el pesimismo realista es una virtud noble. La prudencia y la cautela protegen lo que más valoras. No te dejes llevar por euforias vacías.'
             )}
           </p>
-
-          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-3">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              ¿Tienes una creencia automática ligada a esta situación?
-            </span>
-            {onApplyScenarioToWizard && (
-              <button
-                onClick={() => onApplyScenarioToWizard(
-                  `Situación evaluada con costo de fracaso: ${selectedCost.toUpperCase()}`,
-                  selectedCost === 'high' ? 'Podría salir mal y debo estar alerta a las fallas.' : 'Tengo miedo a que me rechacen o no salga perfecto.',
-                  selectedCost
-                )}
-                className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-              >
-                <span>Trabajar en el Gimnasio ABCDE</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
         </div>
       </div>
 
-      {/* Preset Scenarios Library */}
-      <div>
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
-          Casos de Estudio según Seligman
-        </h2>
+      {/* Preset Scenarios */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="font-serif text-2xl font-normal text-[#282D2A] dark:text-[#F0F3EF]">
+            Casos de Estudio de la Vida Cotidiana
+          </h2>
+          <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1">
+            Aprende a distinguir situaciones según la matriz de Seligman.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {presetScenarios.map((sc, idx) => {
-            const IconComponent = sc.icon;
-            return (
-              <div 
-                key={idx}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-500/40 transition flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        <IconComponent className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                        {sc.category}
-                      </span>
-                    </div>
-
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                      sc.costLevel === 'low'
-                        ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200'
-                        : 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-200'
-                    }`}>
-                      {sc.costLevel === 'low' ? 'Costo Bajo' : 'Costo Alto'}
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                    {sc.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {sc.costDescription}
-                  </p>
-
-                  <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700">
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">Criterio:</p>
-                    <p className="mt-0.5 leading-relaxed">{sc.rationale}</p>
-                  </div>
+          {presetScenarios.map((sc, idx) => (
+            <div 
+              key={idx}
+              className="bg-white/80 dark:bg-[#1A1F1C] rounded-3xl p-6 border border-[#E8E2D7] dark:border-[#2C332E] shadow-xs flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between text-xs text-[#727874] dark:text-[#8E9590] mb-2">
+                  <span>{sc.category}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-medium">{sc.recommendation}</span>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-teal-600 dark:text-teal-400">
-                    {sc.recommendation === 'flexible_optimism' ? 'Optimismo Aprendido' : 'Pesimismo Prudente'}
-                  </span>
+                <h3 className="font-serif text-base text-[#282D2A] dark:text-[#F0F3EF]">
+                  {sc.title}
+                </h3>
+                <p className="text-xs text-[#696F6B] dark:text-[#9BA19C] mt-1.5 leading-relaxed">
+                  {sc.costDescription}
+                </p>
 
-                  {onApplyScenarioToWizard && (
-                    <button
-                      onClick={() => onApplyScenarioToWizard(sc.adversityExample, sc.beliefExample, sc.costLevel)}
-                      className="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 flex items-center gap-1 transition"
-                    >
-                      <span>Entrenar caso</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                <div className="mt-4 p-3.5 rounded-2xl bg-[#F7F3EB] dark:bg-[#222724] text-xs text-[#5D635F] dark:text-[#B6BCB7] leading-relaxed">
+                  {sc.rationale}
                 </div>
               </div>
-            );
-          })}
+
+              {onApplyScenarioToWizard && (
+                <div className="mt-5 pt-3 border-t border-[#F2ECE2] dark:border-[#282E2A] flex justify-end">
+                  <button
+                    onClick={() => onApplyScenarioToWizard(sc.adversityExample, sc.beliefExample, sc.costLevel)}
+                    className="text-xs font-semibold text-[#4A644C] dark:text-[#A8BEA7] hover:underline flex items-center gap-1"
+                  >
+                    <span>Llevar a reflexión ABCDE</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

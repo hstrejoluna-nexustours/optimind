@@ -53,6 +53,39 @@ export interface ExplanatoryProfile {
   lastWorkoutDate: string;
 }
 
+export interface MoodCheckIn {
+  id: string;
+  timestamp: string;
+  score: number; // 1 to 10
+  energy: 'calma' | 'sereno' | 'inquieto' | 'agotado';
+  note?: string;
+}
+
+export interface GlossaryTerm {
+  id: string;
+  term: string;
+  pronunciation?: string;
+  shortDef: string;
+  fullExplanation: string;
+  practicalExample: string;
+  tags: string[];
+  seligmanQuote?: string;
+}
+
+export interface WikiArticle {
+  id: string;
+  title: string;
+  subtitle: string;
+  readTime: string;
+  category: string;
+  summary: string;
+  sections: {
+    title: string;
+    content: string;
+    keyTakeaway?: string;
+  }[];
+}
+
 export interface QuizQuestion {
   id: number;
   scenario: string;
