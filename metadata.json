@@ -1,0 +1,6 @@
+{
+  "name": "OptiMind: Gimnasio de Optimismo Aprendido",
+  "description": "Entrenador interactivo de Reestructuración Cognitiva y Optimismo Aprendido basado en el modelo ABCDE del Dr. Martin Seligman.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
